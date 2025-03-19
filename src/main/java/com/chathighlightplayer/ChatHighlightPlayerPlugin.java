@@ -23,7 +23,7 @@ import java.awt.Color;
 
 @Slf4j
 @PluginDescriptor(
-		name = "Chat Highlight Player",
+		name = "Click Chat Highlight Player",
 		description = "Highlight Player when click on name in chat!"
 )
 public class ChatHighlightPlayerPlugin extends Plugin

@@ -26,7 +26,7 @@ public class ChatHighlightPlayerOverlay extends Overlay {
     @Inject
     public ChatHighlightPlayerOverlay() {
         setPosition(OverlayPosition.DYNAMIC);
-        setLayer(OverlayLayer.ABOVE_SCENE);
+		setLayer(OverlayLayer.ALWAYS_ON_TOP);
     }
 
     public void setTargetPlayer(Player player,Color color) {
@@ -42,15 +42,18 @@ public class ChatHighlightPlayerOverlay extends Overlay {
     @Override
     public Dimension render(Graphics2D graphics) {
         if (istagged && targetPlayer != null) {
-
+			
+			WorldPoint targetWorldPos = targetPlayer.getWorldLocation();
+			LocalPoint targetLocalPos = LocalPoint.fromWorld(client, targetWorldPos);
+			
             if(showline && client.getLocalPlayer() != null) {
                 // Get my player's position
                 WorldPoint myWorldPos = client.getLocalPlayer().getWorldLocation();
                 LocalPoint myLocalPos = LocalPoint.fromWorld(client, myWorldPos);
 
                 // Get target player's position
-                WorldPoint targetWorldPos = targetPlayer.getWorldLocation();
-                LocalPoint targetLocalPos = LocalPoint.fromWorld(client, targetWorldPos);
+                
+                
 
                 // Convert world positions to screen positions
                 if (myLocalPos != null && targetLocalPos != null) {
@@ -65,6 +68,16 @@ public class ChatHighlightPlayerOverlay extends Overlay {
                     }
                 }
             }
+
+			if (targetPlayer != null) {
+				if (targetLocalPos != null) {
+					Point minimapPoint = Perspective.localToMinimap(client, targetLocalPos);
+					if (minimapPoint != null) {
+						graphics.setColor(color); // Dot color
+						graphics.fillOval(minimapPoint.getX() - 2, minimapPoint.getY() - 2, 4, 4);
+					}
+				}
+			}
 
             OverlayUtil.renderActorOverlay(graphics, targetPlayer, targetPlayer.getName(), color);
         }
