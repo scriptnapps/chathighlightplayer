@@ -58,15 +58,28 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		initiatehighlight();
 	}
 
+	private boolean isHighlightActive()
+	{
+		if (!isActive)
+		{
+			return false;
+		}
+
+		long currentTime = System.currentTimeMillis();
+		if (currentTime >= startTime + durationMs * 1000)
+		{
+			isActive = false;
+			return false;
+		}
+
+		return true;
+	}
+
 	private void initiatehighlight(){
-		if(!isActive) {
+		if(!isHighlightActive()) {
 			overlay.setTargetVisible(false,showline);
 		}
 		if (isActive && targetPlayerName != null && targetPlayerName.length() > 1) {
-			long currentTime = System.currentTimeMillis();
-			if (currentTime >= startTime + durationMs*1000) {
-				isActive = false;
-			}
 			for (Player player : client.getPlayers()) {
 				if (player.getName() != null && cleanPlayerName(player.getName()).equalsIgnoreCase(targetPlayerName)) {
 					overlay.setTargetPlayer(player,color);
@@ -114,7 +127,7 @@ public class ChatHighlightPlayerPlugin extends Plugin
 
 	private void highlightMatchingMenuEntry(MenuEntry menuEntry)
 	{
-		if (targetPlayerName == null || targetPlayerName.length() <= 1)
+		if (!isHighlightActive() || targetPlayerName == null || targetPlayerName.length() <= 1)
 		{
 			return;
 		}
