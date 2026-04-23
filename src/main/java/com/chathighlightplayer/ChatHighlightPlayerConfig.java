@@ -48,4 +48,14 @@ public interface ChatHighlightPlayerConfig extends Config
 	{
 		return true;
 	}
+
+	@ConfigItem(
+			keyName = "showHoverHighlight",
+			name = "Show hover tooltip (chatbox)",
+			description = "Show the Highlight Player menu option when hovering chat usernames"
+	)
+	default boolean showHoverHighlight()
+	{
+		return true;
+	}
 }

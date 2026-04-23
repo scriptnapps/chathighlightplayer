@@ -21,6 +21,8 @@ import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.Text;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Slf4j
@@ -163,6 +165,41 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		}
 	}
 
+	private void addChatHighlightMenuEntry(String username, String target)
+	{
+		Color customColor = config.tagColor();
+		String hexColor = colorToHex(customColor);
+		client.createMenuEntry(1)
+				.setOption("<col=" + hexColor.replace("#", "") + ">" + "Highlight Player" + "</col>")
+				.setTarget(target)
+				.setType(MenuAction.RUNELITE_HIGH_PRIORITY)
+				.onClick(e -> setHighlightPlayer(username));
+	}
+
+	private void moveHighlightPlayerEntryToTop()
+	{
+		MenuEntry[] menuEntries = client.getMenuEntries();
+		List<MenuEntry> reordered = new ArrayList<>(menuEntries.length);
+		MenuEntry highlightEntry = null;
+
+		for (MenuEntry menuEntry : menuEntries)
+		{
+			if (menuEntry.getOption().contains("Highlight Player"))
+			{
+				highlightEntry = menuEntry;
+				continue;
+			}
+
+			reordered.add(menuEntry);
+		}
+
+		if (highlightEntry != null)
+		{
+			reordered.add(highlightEntry);
+			client.setMenuEntries(reordered.toArray(new MenuEntry[0]));
+		}
+	}
+
 	private String normalizePlayerName(String name)
 	{
 		return cleanPlayerName(name)
@@ -222,16 +259,10 @@ public class ChatHighlightPlayerPlugin extends Plugin
 			return;
 		}
 
-		if (entry.getOption().equals(REPORT) ) {
+		if (entry.getOption().equals(REPORT) && config.showHoverHighlight()) {
 			String username = cleanPlayerName(entry.getTarget());
              if(username.trim().length() > 1) {
-				 Color customColor = config.tagColor();
-				 String hexColor = colorToHex(customColor);
-				 client.createMenuEntry(1)
-						 .setOption("<col=" + hexColor.replace("#", "") + ">" + "Highlight Player" + "</col>")
-						 .setTarget(entry.getTarget())
-						 .setType(MenuAction.RUNELITE_HIGH_PRIORITY)
-						 .onClick(e -> setHighlightPlayer(username));
+				 addChatHighlightMenuEntry(username, entry.getTarget());
 			 }
 		}
 
@@ -240,6 +271,23 @@ public class ChatHighlightPlayerPlugin extends Plugin
 	@Subscribe
 	public void onMenuOpened(MenuOpened event)
 	{
+		if (!config.showHoverHighlight())
+		{
+			for (MenuEntry menuEntry : client.getMenuEntries())
+			{
+				if (menuEntry.getOption().equals(REPORT))
+				{
+					String username = cleanPlayerName(menuEntry.getTarget());
+					if (username.trim().length() > 1)
+					{
+						addChatHighlightMenuEntry(username, menuEntry.getTarget());
+						moveHighlightPlayerEntryToTop();
+					}
+					break;
+				}
+			}
+		}
+
 		for (MenuEntry menuEntry : client.getMenuEntries())
 		{
 			highlightMatchingMenuEntry(menuEntry);
