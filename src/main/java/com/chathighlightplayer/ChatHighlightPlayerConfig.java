@@ -38,4 +38,24 @@ public interface ChatHighlightPlayerConfig extends Config
 	{
 		return true;
 	}
+
+	@ConfigItem(
+			keyName = "highlightCondensedPlayerName",
+			name = "Highlight condensed player name",
+			description = "Color the player name in condensed player option menus"
+	)
+	default boolean highlightCondensedPlayerName()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "showHoverHighlight",
+			name = "Show hover tooltip (chatbox)",
+			description = "Show the Highlight Player menu option when hovering chat usernames"
+	)
+	default boolean showHoverHighlight()
+	{
+		return true;
+	}
 }

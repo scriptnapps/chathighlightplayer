@@ -4,7 +4,9 @@ import com.google.inject.Provides;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import net.runelite.api.events.BeforeMenuRender;
 import net.runelite.api.events.MenuEntryAdded;
+import net.runelite.api.events.MenuOpened;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.Widget;
@@ -19,6 +21,8 @@ import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.Text;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Slf4j
@@ -56,15 +60,28 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		initiatehighlight();
 	}
 
+	private boolean isHighlightActive()
+	{
+		if (!isActive)
+		{
+			return false;
+		}
+
+		long currentTime = System.currentTimeMillis();
+		if (currentTime >= startTime + durationMs * 1000)
+		{
+			isActive = false;
+			return false;
+		}
+
+		return true;
+	}
+
 	private void initiatehighlight(){
-		if(!isActive) {
+		if(!isHighlightActive()) {
 			overlay.setTargetVisible(false,showline);
 		}
 		if (isActive && targetPlayerName != null && targetPlayerName.length() > 1) {
-			long currentTime = System.currentTimeMillis();
-			if (currentTime >= startTime + durationMs*1000) {
-				isActive = false;
-			}
 			for (Player player : client.getPlayers()) {
 				if (player.getName() != null && cleanPlayerName(player.getName()).equalsIgnoreCase(targetPlayerName)) {
 					overlay.setTargetPlayer(player,color);
@@ -77,7 +94,7 @@ public class ChatHighlightPlayerPlugin extends Plugin
 	private void setHighlightPlayer(String playerName) {
 		targetPlayerName = "";
 		log.info("tagging" + playerName);
-		targetPlayerName = cleanPlayerName(playerName);
+		targetPlayerName = normalizePlayerName(playerName);
 		startTime = System.currentTimeMillis();
 		isActive = true;
 		showline = config.line();
@@ -90,20 +107,109 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
 	}
 
+	private String buildHighlightedPlayerTarget(String rawTarget)
+	{
+		String cleanedTarget = cleanPlayerName(rawTarget);
+		String levelSuffix = "";
+		int levelIdx = cleanedTarget.indexOf(" (level-");
+		if (levelIdx >= 0)
+		{
+			levelSuffix = cleanedTarget.substring(levelIdx);
+			cleanedTarget = cleanedTarget.substring(0, levelIdx);
+		}
+
+		String hexColor = colorToHex(color).replace("#", "");
+		if (levelSuffix.isEmpty())
+		{
+			return "<col=" + hexColor + ">" + cleanedTarget + "</col>";
+		}
+
+		return "<col=" + hexColor + ">" + cleanedTarget + "</col><col=ff9040>" + levelSuffix + "</col>";
+	}
+
+	private void highlightMatchingMenuEntry(MenuEntry menuEntry)
+	{
+		if (!isHighlightActive() || targetPlayerName == null || targetPlayerName.length() <= 1)
+		{
+			return;
+		}
+
+		String optionName = "";
+		String targetName = "";
+		try
+		{
+			optionName = normalizePlayerName(menuEntry.getOption());
+			targetName = normalizePlayerName(menuEntry.getTarget());
+		}
+		catch (Exception ignore)
+		{
+		}
+
+		Color customColor = color;
+		String hexColor = colorToHex(customColor).replace("#", "");
+		boolean isCondensedParent = config.highlightCondensedPlayerName()
+			&& menuEntry.getSubMenu() != null
+			&& menuEntry.getType() == MenuAction.RUNELITE
+			&& menuEntry.getOption().isEmpty();
+		if (isCondensedParent && optionName.equalsIgnoreCase(targetPlayerName) && !menuEntry.getOption().equals("Trade with"))
+		{
+			menuEntry.setOption("<col=" + hexColor + ">" + menuEntry.getOption() + "</col>");
+		}
+		if (isCondensedParent && targetName.equalsIgnoreCase(targetPlayerName))
+		{
+			menuEntry.setTarget(buildHighlightedPlayerTarget(menuEntry.getTarget()));
+		}
+		if (menuEntry.getOption().equals("Trade with") && targetName.equalsIgnoreCase(targetPlayerName))
+		{
+			menuEntry.setOption("<col=" + hexColor + ">" + menuEntry.getOption() + "</col>");
+		}
+	}
+
+	private void addChatHighlightMenuEntry(String username, String target)
+	{
+		Color customColor = config.tagColor();
+		String hexColor = colorToHex(customColor);
+		client.createMenuEntry(1)
+				.setOption("<col=" + hexColor.replace("#", "") + ">" + "Highlight Player" + "</col>")
+				.setTarget(target)
+				.setType(MenuAction.RUNELITE_HIGH_PRIORITY)
+				.onClick(e -> setHighlightPlayer(username));
+	}
+
+	private void moveHighlightPlayerEntryToTop()
+	{
+		MenuEntry[] menuEntries = client.getMenuEntries();
+		List<MenuEntry> reordered = new ArrayList<>(menuEntries.length);
+		MenuEntry highlightEntry = null;
+
+		for (MenuEntry menuEntry : menuEntries)
+		{
+			if (menuEntry.getOption().contains("Highlight Player"))
+			{
+				highlightEntry = menuEntry;
+				continue;
+			}
+
+			reordered.add(menuEntry);
+		}
+
+		if (highlightEntry != null)
+		{
+			reordered.add(highlightEntry);
+			client.setMenuEntries(reordered.toArray(new MenuEntry[0]));
+		}
+	}
+
+	private String normalizePlayerName(String name)
+	{
+		return cleanPlayerName(name)
+			.replaceAll("\\s*\\(level-\\d+\\)$", "")
+			.trim();
+	}
+
 	@Subscribe
 	public void onMenuEntryAdded(MenuEntryAdded entry) {
-
-		if (entry.getMenuEntry().getOption().equals("Trade with")) {
-			String uman = "";
-			try {
-				uman = cleanPlayerName(entry.getMenuEntry().getTarget().replaceAll(" \\(level-\\d+\\)", ""));
-			}catch(Exception ignore){}
-			if(uman != null && uman.equalsIgnoreCase(targetPlayerName)){
-				Color customColor = color;
-				String hexColor = colorToHex(customColor);
-				entry.getMenuEntry().setOption("<col=" + hexColor.replace("#", "") + ">" + entry.getMenuEntry().getOption() + "</col>");
-			}
-		}
+		highlightMatchingMenuEntry(entry.getMenuEntry());
 
 		if (entry.getType() != MenuAction.CC_OP.getId() && entry.getType() != MenuAction.CC_OP_LOW_PRIORITY.getId())
 		{
@@ -153,19 +259,50 @@ public class ChatHighlightPlayerPlugin extends Plugin
 			return;
 		}
 
-		if (entry.getOption().equals(REPORT) ) {
+		if (entry.getOption().equals(REPORT) && config.showHoverHighlight()) {
 			String username = cleanPlayerName(entry.getTarget());
              if(username.trim().length() > 1) {
-				 Color customColor = config.tagColor();
-				 String hexColor = colorToHex(customColor);
-				 client.createMenuEntry(1)
-						 .setOption("<col=" + hexColor.replace("#", "") + ">" + "Highlight Player" + "</col>")
-						 .setTarget(entry.getTarget())
-						 .setType(MenuAction.RUNELITE_HIGH_PRIORITY)
-						 .onClick(e -> setHighlightPlayer(username));
+				 addChatHighlightMenuEntry(username, entry.getTarget());
 			 }
 		}
 
+	}
+
+	@Subscribe
+	public void onMenuOpened(MenuOpened event)
+	{
+		if (!config.showHoverHighlight())
+		{
+			for (MenuEntry menuEntry : client.getMenuEntries())
+			{
+				if (menuEntry.getOption().equals(REPORT))
+				{
+					String username = cleanPlayerName(menuEntry.getTarget());
+					if (username.trim().length() > 1)
+					{
+						addChatHighlightMenuEntry(username, menuEntry.getTarget());
+						moveHighlightPlayerEntryToTop();
+					}
+					break;
+				}
+			}
+		}
+
+		for (MenuEntry menuEntry : client.getMenuEntries())
+		{
+			highlightMatchingMenuEntry(menuEntry);
+		}
+	}
+
+	@Subscribe
+	public void onBeforeMenuRender(BeforeMenuRender event)
+	{
+		MenuEntry[] menuEntries = client.getMenuEntries();
+		for (MenuEntry menuEntry : menuEntries)
+		{
+			highlightMatchingMenuEntry(menuEntry);
+		}
+		client.setMenuEntries(menuEntries);
 	}
 
 	private String cleanPlayerName(String name) {
