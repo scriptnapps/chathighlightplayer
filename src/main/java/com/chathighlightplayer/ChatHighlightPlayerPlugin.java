@@ -176,6 +176,50 @@ public class ChatHighlightPlayerPlugin extends Plugin
 				.onClick(e -> setHighlightPlayer(username));
 	}
 
+	private boolean hasHighlightPlayerMenuEntry()
+	{
+		for (MenuEntry menuEntry : client.getMenu().getMenuEntries())
+		{
+			if (menuEntry.getOption().contains("Highlight Player"))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean isChatboxMessageEntry(int packedWidgetId)
+	{
+		final int groupId = WidgetUtil.componentToInterface(packedWidgetId);
+		final int childId = WidgetUtil.componentToId(packedWidgetId);
+		if (groupId != InterfaceID.CHATBOX)
+		{
+			return false;
+		}
+
+		final Widget widget = client.getWidget(groupId, childId);
+		if (widget == null)
+		{
+			return false;
+		}
+
+		final Widget parent = widget.getParent();
+		if (parent == null || ComponentID.CHATBOX_MESSAGE_LINES != parent.getId())
+		{
+			return false;
+		}
+
+		final int first = WidgetUtil.componentToId(ComponentID.CHATBOX_FIRST_MESSAGE);
+		final int dynamicChildId = (childId - first) * 4 + 1;
+		return parent.getChild(dynamicChildId) != null;
+	}
+
+	private boolean isChatboxReportMenuEntry(MenuEntry menuEntry)
+	{
+		return REPORT.equals(menuEntry.getOption()) && isChatboxMessageEntry(menuEntry.getParam1());
+	}
+
 	private void moveHighlightPlayerEntryToTop()
 	{
 		MenuEntry[] menuEntries = client.getMenuEntries();
@@ -216,19 +260,14 @@ public class ChatHighlightPlayerPlugin extends Plugin
 			return;
 		}
 
-		final int groupId = WidgetUtil.componentToInterface(entry.getActionParam1());
-		final int childId = WidgetUtil.componentToId(entry.getActionParam1());
-
-		if (groupId != InterfaceID.CHATBOX)
+		if (!isChatboxMessageEntry(entry.getActionParam1()))
 		{
 			return;
 		}
 
-		MenuEntry[] mm = client.getMenu().getMenuEntries();
-		for(MenuEntry m:mm){
-			if(m.getOption().contains("Highlight Player")) {
-				return;
-			}
+		if (hasHighlightPlayerMenuEntry())
+		{
+			return;
 		}
 
 		if (entry.getOption().toLowerCase().contains(TRADE.toLowerCase()) ) {
@@ -240,22 +279,6 @@ public class ChatHighlightPlayerPlugin extends Plugin
 					.setTarget(entry.getTarget())
 					.setType(MenuAction.WIDGET_SECOND_OPTION)
 					.onClick(e -> setHighlightPlayer(username));
-			return;
-		}
-
-		final Widget widget = client.getWidget(groupId, childId);
-		final Widget parent = widget.getParent();
-
-		if (ComponentID.CHATBOX_MESSAGE_LINES != parent.getId())
-		{
-			return;
-		}
-
-		final int first = WidgetUtil.componentToId(ComponentID.CHATBOX_FIRST_MESSAGE);
-		final int dynamicChildId = (childId - first) * 4 + 1;
-		final Widget messageContents = parent.getChild(dynamicChildId);
-		if (messageContents == null)
-		{
 			return;
 		}
 
@@ -275,7 +298,7 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		{
 			for (MenuEntry menuEntry : client.getMenuEntries())
 			{
-				if (menuEntry.getOption().equals(REPORT))
+				if (isChatboxReportMenuEntry(menuEntry))
 				{
 					String username = cleanPlayerName(menuEntry.getTarget());
 					if (username.trim().length() > 1)
