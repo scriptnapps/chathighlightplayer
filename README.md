@@ -42,5 +42,5 @@ This makes it easy to separate players by purpose, for example:
 
 - Friends
 - Raid teammates
-- Frequently traded users
+- Frequently traded players
 - Players you want to avoid
