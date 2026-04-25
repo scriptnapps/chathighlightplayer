@@ -13,7 +13,6 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetUtil;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.api.Client;
@@ -21,17 +20,9 @@ import net.runelite.api.events.GameTick;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.Text;
 
-import java.awt.Toolkit;
 import java.awt.Color;
-import java.awt.datatransfer.StringSelection;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 
 
 @Slf4j
@@ -60,28 +51,12 @@ public class ChatHighlightPlayerPlugin extends Plugin
 	private long startTime = 0;
 	private boolean isActive = false;
 	private boolean showline = true;
-	private Map<String, HighlightStyle> alwaysHighlightedPlayers = Collections.emptyMap();
 
 	private static final String REPORT = "Report";
 	private static final String TRADE = "Accept trade";
-	private static final String COPY_USERNAME = "Copy Username";
-	private static final String CONFIG_GROUP = "chathighlightplayer";
 
 	@Subscribe
 	public void onGameTick(GameTick event) {
-		initiatehighlight();
-	}
-
-	@Subscribe
-	public void onConfigChanged(ConfigChanged event)
-	{
-		if (!CONFIG_GROUP.equals(event.getGroup()))
-		{
-			return;
-		}
-
-		rebuildAlwaysHighlightCache();
-		overlay.setTrimLines(config.trimHighlightLines());
 		initiatehighlight();
 	}
 
@@ -103,32 +78,17 @@ public class ChatHighlightPlayerPlugin extends Plugin
 	}
 
 	private void initiatehighlight(){
-		boolean temporaryHighlightActive = isHighlightActive() && targetPlayerName != null && targetPlayerName.length() > 1;
-		if (alwaysHighlightedPlayers.isEmpty() && !temporaryHighlightActive)
-		{
-			overlay.setHighlightedPlayers(Collections.emptyMap());
-			return;
+		if(!isHighlightActive()) {
+			overlay.setTargetVisible(false,showline);
 		}
-
-		Map<String, HighlightStyle> configuredHighlights = new LinkedHashMap<>(alwaysHighlightedPlayers);
-
-		if (temporaryHighlightActive) {
-			configuredHighlights.put(targetPlayerName.toLowerCase(Locale.ENGLISH), new HighlightStyle(color, showline, config.showTemporaryPlayerName()));
-		}
-
-		Map<Player, HighlightStyle> highlightedPlayers = new LinkedHashMap<>();
-		for (Player player : client.getPlayers()) {
-			if (player == null || player.getName() == null) {
-				continue;
+		if (isActive && targetPlayerName != null && targetPlayerName.length() > 1) {
+			for (Player player : client.getPlayers()) {
+				if (player.getName() != null && cleanPlayerName(player.getName()).equalsIgnoreCase(targetPlayerName)) {
+					overlay.setTargetPlayer(player,color);
+					overlay.setTargetVisible(true,showline);
+				}
 			}
-
-			HighlightStyle style = configuredHighlights.get(normalizePlayerName(player.getName()).toLowerCase(Locale.ENGLISH));
-			if (style != null) {
-				highlightedPlayers.put(player, style);
-			}
-		}
-
-		overlay.setHighlightedPlayers(highlightedPlayers);
+        }
 	}
 
 	private void setHighlightPlayer(String playerName) {
@@ -147,7 +107,7 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
 	}
 
-	private String buildHighlightedPlayerTarget(String rawTarget, Color highlightColor)
+	private String buildHighlightedPlayerTarget(String rawTarget)
 	{
 		String cleanedTarget = cleanPlayerName(rawTarget);
 		String levelSuffix = "";
@@ -158,7 +118,7 @@ public class ChatHighlightPlayerPlugin extends Plugin
 			cleanedTarget = cleanedTarget.substring(0, levelIdx);
 		}
 
-		String hexColor = colorToHex(highlightColor).replace("#", "");
+		String hexColor = colorToHex(color).replace("#", "");
 		if (levelSuffix.isEmpty())
 		{
 			return "<col=" + hexColor + ">" + cleanedTarget + "</col>";
@@ -167,23 +127,13 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		return "<col=" + hexColor + ">" + cleanedTarget + "</col><col=ff9040>" + levelSuffix + "</col>";
 	}
 
-	private HighlightStyle getMenuHighlightStyle(String playerName)
-	{
-		if (playerName == null || playerName.length() <= 1)
-		{
-			return null;
-		}
-
-		if (isHighlightActive() && targetPlayerName != null && playerName.equalsIgnoreCase(targetPlayerName))
-		{
-			return new HighlightStyle(color, showline, config.showTemporaryPlayerName());
-		}
-
-		return alwaysHighlightedPlayers.get(playerName.toLowerCase(Locale.ENGLISH));
-	}
-
 	private void highlightMatchingMenuEntry(MenuEntry menuEntry)
 	{
+		if (!isHighlightActive() || targetPlayerName == null || targetPlayerName.length() <= 1)
+		{
+			return;
+		}
+
 		String optionName = "";
 		String targetName = "";
 		try
@@ -195,24 +145,22 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		{
 		}
 
-		HighlightStyle optionStyle = getMenuHighlightStyle(optionName);
-		HighlightStyle targetStyle = getMenuHighlightStyle(targetName);
+		Color customColor = color;
+		String hexColor = colorToHex(customColor).replace("#", "");
 		boolean isCondensedParent = config.highlightCondensedPlayerName()
 			&& menuEntry.getSubMenu() != null
 			&& menuEntry.getType() == MenuAction.RUNELITE
 			&& menuEntry.getOption().isEmpty();
-		if (isCondensedParent && optionStyle != null && !menuEntry.getOption().equals("Trade with"))
+		if (isCondensedParent && optionName.equalsIgnoreCase(targetPlayerName) && !menuEntry.getOption().equals("Trade with"))
 		{
-			String hexColor = colorToHex(optionStyle.getColor()).replace("#", "");
 			menuEntry.setOption("<col=" + hexColor + ">" + menuEntry.getOption() + "</col>");
 		}
-		if (isCondensedParent && targetStyle != null)
+		if (isCondensedParent && targetName.equalsIgnoreCase(targetPlayerName))
 		{
-			menuEntry.setTarget(buildHighlightedPlayerTarget(menuEntry.getTarget(), targetStyle.getColor()));
+			menuEntry.setTarget(buildHighlightedPlayerTarget(menuEntry.getTarget()));
 		}
-		if (menuEntry.getOption().equals("Trade with") && targetStyle != null)
+		if (menuEntry.getOption().equals("Trade with") && targetName.equalsIgnoreCase(targetPlayerName))
 		{
-			String hexColor = colorToHex(targetStyle.getColor()).replace("#", "");
 			menuEntry.setOption("<col=" + hexColor + ">" + menuEntry.getOption() + "</col>");
 		}
 	}
@@ -228,13 +176,17 @@ public class ChatHighlightPlayerPlugin extends Plugin
 				.onClick(e -> setHighlightPlayer(username));
 	}
 
-	private void addCopyUsernameMenuEntry(String username, String target)
+	private boolean hasHighlightPlayerMenuEntry()
 	{
-		client.createMenuEntry(1)
-				.setOption(COPY_USERNAME)
-				.setTarget(target)
-				.setType(MenuAction.RUNELITE_HIGH_PRIORITY)
-				.onClick(e -> Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(username), null));
+		for (MenuEntry menuEntry : client.getMenu().getMenuEntries())
+		{
+			if (menuEntry.getOption().contains("Highlight Player"))
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private boolean isChatboxMessageEntry(int packedWidgetId)
@@ -266,83 +218,6 @@ public class ChatHighlightPlayerPlugin extends Plugin
 	private boolean isChatboxReportMenuEntry(MenuEntry menuEntry)
 	{
 		return REPORT.equals(menuEntry.getOption()) && isChatboxMessageEntry(menuEntry.getParam1());
-	}
-
-	private boolean hasMenuEntryContaining(String text)
-	{
-		for (MenuEntry menuEntry : client.getMenu().getMenuEntries())
-		{
-			if (menuEntry.getOption().contains(text))
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private void maybeAddChatMenuEntries(String username, String target, boolean includeHighlightEntry)
-	{
-		if (username.trim().length() <= 1)
-		{
-			return;
-		}
-
-		if (includeHighlightEntry && !hasMenuEntryContaining("Highlight Player"))
-		{
-			addChatHighlightMenuEntry(username, target);
-		}
-
-		if (config.copyUsernameToClipboard() && !hasMenuEntryContaining(COPY_USERNAME))
-		{
-			addCopyUsernameMenuEntry(username, target);
-		}
-	}
-
-	private void addConfiguredHighlights(Map<String, HighlightStyle> configuredHighlights, String playerNames, Color highlightColor, boolean lineEnabled, boolean showName)
-	{
-		for (String playerName : parseConfiguredNames(playerNames))
-		{
-			configuredHighlights.putIfAbsent(playerName.toLowerCase(Locale.ENGLISH), new HighlightStyle(highlightColor, lineEnabled, showName));
-		}
-	}
-
-	private Set<String> parseConfiguredNames(String playerNames)
-	{
-		Set<String> parsedNames = new LinkedHashSet<>();
-		if (playerNames == null || playerNames.trim().isEmpty())
-		{
-			return parsedNames;
-		}
-
-		for (String rawName : playerNames.split(","))
-		{
-			String normalizedName = normalizePlayerName(rawName);
-			if (normalizedName.length() > 1)
-			{
-				parsedNames.add(normalizedName);
-			}
-		}
-
-		return parsedNames;
-	}
-
-	private void rebuildAlwaysHighlightCache()
-	{
-		Map<String, HighlightStyle> configuredHighlights = new LinkedHashMap<>();
-		if (config.alwaysHighlightEnabledOne())
-		{
-			addConfiguredHighlights(configuredHighlights, config.alwaysHighlightPlayersOne(), config.alwaysHighlightColorOne(), config.alwaysHighlightLineOne(), config.alwaysHighlightShowNameOne());
-		}
-		if (config.alwaysHighlightEnabledTwo())
-		{
-			addConfiguredHighlights(configuredHighlights, config.alwaysHighlightPlayersTwo(), config.alwaysHighlightColorTwo(), config.alwaysHighlightLineTwo(), config.alwaysHighlightShowNameTwo());
-		}
-		if (config.alwaysHighlightEnabledThree())
-		{
-			addConfiguredHighlights(configuredHighlights, config.alwaysHighlightPlayersThree(), config.alwaysHighlightColorThree(), config.alwaysHighlightLineThree(), config.alwaysHighlightShowNameThree());
-		}
-		alwaysHighlightedPlayers = configuredHighlights;
 	}
 
 	private void moveHighlightPlayerEntryToTop()
@@ -390,28 +265,28 @@ public class ChatHighlightPlayerPlugin extends Plugin
 			return;
 		}
 
+		if (hasHighlightPlayerMenuEntry())
+		{
+			return;
+		}
+
 		if (entry.getOption().toLowerCase().contains(TRADE.toLowerCase()) ) {
 			String username = cleanPlayerName(entry.getTarget());
-			if (!hasMenuEntryContaining("Highlight Player"))
-			{
-				Color customColor = config.tagColor();
-				String hexColor = colorToHex(customColor);
-				client.createMenuEntry(1)
-						.setOption("<col=" + hexColor.replace("#", "") + ">" + "Highlight Player" + "</col>")
-						.setTarget(entry.getTarget())
-						.setType(MenuAction.WIDGET_SECOND_OPTION)
-						.onClick(e -> setHighlightPlayer(username));
-			}
-			if (config.copyUsernameToClipboard() && !hasMenuEntryContaining(COPY_USERNAME))
-			{
-				addCopyUsernameMenuEntry(username, entry.getTarget());
-			}
+			Color customColor = config.tagColor();
+			String hexColor = colorToHex(customColor);
+			client.createMenuEntry(1)
+					.setOption("<col=" + hexColor.replace("#", "") + ">" + "Highlight Player" + "</col>")
+					.setTarget(entry.getTarget())
+					.setType(MenuAction.WIDGET_SECOND_OPTION)
+					.onClick(e -> setHighlightPlayer(username));
 			return;
 		}
 
 		if (entry.getOption().equals(REPORT) && config.showHoverHighlight()) {
 			String username = cleanPlayerName(entry.getTarget());
-			maybeAddChatMenuEntries(username, entry.getTarget(), true);
+             if(username.trim().length() > 1) {
+				 addChatHighlightMenuEntry(username, entry.getTarget());
+			 }
 		}
 
 	}
@@ -426,9 +301,9 @@ public class ChatHighlightPlayerPlugin extends Plugin
 				if (isChatboxReportMenuEntry(menuEntry))
 				{
 					String username = cleanPlayerName(menuEntry.getTarget());
-					if (username.trim().length() > 1 && (!config.showHoverHighlight() || config.copyUsernameToClipboard()))
+					if (username.trim().length() > 1)
 					{
-						maybeAddChatMenuEntries(username, menuEntry.getTarget(), !config.showHoverHighlight());
+						addChatHighlightMenuEntry(username, menuEntry.getTarget());
 						moveHighlightPlayerEntryToTop();
 					}
 					break;
@@ -463,8 +338,6 @@ public class ChatHighlightPlayerPlugin extends Plugin
 	protected void startUp() throws Exception
 	{
 		log.info("ChatHighlightPlayerPlugin started!");
-		rebuildAlwaysHighlightCache();
-		overlay.setTrimLines(config.trimHighlightLines());
 		overlayManager.add(overlay);
 	}
 
