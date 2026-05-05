@@ -113,7 +113,7 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		Map<String, HighlightStyle> configuredHighlights = new LinkedHashMap<>(alwaysHighlightedPlayers);
 
 		if (temporaryHighlightActive) {
-			configuredHighlights.put(targetPlayerName.toLowerCase(Locale.ENGLISH), new HighlightStyle(color, showline, config.showTemporaryPlayerName()));
+			configuredHighlights.put(targetPlayerName.toLowerCase(Locale.ENGLISH), new HighlightStyle(color, showline, config.showTemporaryPlayerName(), config.temporaryMenuOption(), config.temporaryHighlightRegularMenuPlayerName(), config.temporaryHideOtherPlayerMenus()));
 		}
 
 		Map<Player, HighlightStyle> highlightedPlayers = new LinkedHashMap<>();
@@ -176,10 +176,49 @@ public class ChatHighlightPlayerPlugin extends Plugin
 
 		if (isHighlightActive() && targetPlayerName != null && playerName.equalsIgnoreCase(targetPlayerName))
 		{
-			return new HighlightStyle(color, showline, config.showTemporaryPlayerName());
+			return new HighlightStyle(color, showline, config.showTemporaryPlayerName(), config.temporaryMenuOption(), config.temporaryHighlightRegularMenuPlayerName(), config.temporaryHideOtherPlayerMenus());
 		}
 
 		return alwaysHighlightedPlayers.get(playerName.toLowerCase(Locale.ENGLISH));
+	}
+
+	private boolean shouldSkipMenuOptionHighlight(String configuredMenuOption)
+	{
+		if (configuredMenuOption == null || configuredMenuOption.trim().isEmpty())
+		{
+			return true;
+		}
+
+		for (String rawConfiguredOption : configuredMenuOption.split(","))
+		{
+			String cleanConfiguredOption = Text.removeTags(rawConfiguredOption).trim();
+			if (!cleanConfiguredOption.isEmpty() && !cleanConfiguredOption.equalsIgnoreCase("none"))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private boolean shouldHighlightMenuOption(String menuOption, String configuredMenuOption)
+	{
+		if (menuOption == null || shouldSkipMenuOptionHighlight(configuredMenuOption))
+		{
+			return false;
+		}
+
+		String cleanMenuOption = Text.removeTags(menuOption).trim();
+		for (String rawConfiguredOption : configuredMenuOption.split(","))
+		{
+			String cleanConfiguredOption = Text.removeTags(rawConfiguredOption).trim();
+			if (cleanConfiguredOption.equals("*") || cleanMenuOption.equalsIgnoreCase(cleanConfiguredOption))
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private void highlightMatchingMenuEntry(MenuEntry menuEntry)
@@ -197,24 +236,105 @@ public class ChatHighlightPlayerPlugin extends Plugin
 
 		HighlightStyle optionStyle = getMenuHighlightStyle(optionName);
 		HighlightStyle targetStyle = getMenuHighlightStyle(targetName);
-		boolean isCondensedParent = config.highlightCondensedPlayerName()
-			&& menuEntry.getSubMenu() != null
+		boolean isCondensedParent = menuEntry.getSubMenu() != null
 			&& menuEntry.getType() == MenuAction.RUNELITE
 			&& menuEntry.getOption().isEmpty();
-		if (isCondensedParent && optionStyle != null && !menuEntry.getOption().equals("Trade with"))
+		if (isCondensedParent && optionStyle != null && !shouldSkipMenuOptionHighlight(optionStyle.getMenuOption()))
 		{
 			String hexColor = colorToHex(optionStyle.getColor()).replace("#", "");
 			menuEntry.setOption("<col=" + hexColor + ">" + menuEntry.getOption() + "</col>");
 		}
-		if (isCondensedParent && targetStyle != null)
+		boolean shouldHighlightPlayerName = targetStyle != null
+			&& ((isCondensedParent && config.highlightCondensedPlayerName())
+				|| (!isCondensedParent && targetStyle.isHighlightRegularMenuPlayerName()));
+		if (shouldHighlightPlayerName)
 		{
 			menuEntry.setTarget(buildHighlightedPlayerTarget(menuEntry.getTarget(), targetStyle.getColor()));
 		}
-		if (menuEntry.getOption().equals("Trade with") && targetStyle != null)
+		if (targetStyle != null && shouldHighlightMenuOption(menuEntry.getOption(), targetStyle.getMenuOption()))
 		{
 			String hexColor = colorToHex(targetStyle.getColor()).replace("#", "");
 			menuEntry.setOption("<col=" + hexColor + ">" + menuEntry.getOption() + "</col>");
 		}
+	}
+
+	private Set<String> getKnownPlayerNames()
+	{
+		Set<String> playerNames = new LinkedHashSet<>();
+		for (Player player : client.getPlayers())
+		{
+			if (player != null && player.getName() != null)
+			{
+				playerNames.add(normalizePlayerName(player.getName()).toLowerCase(Locale.ENGLISH));
+			}
+		}
+
+		return playerNames;
+	}
+
+	private String getMenuEntryPlayerName(MenuEntry menuEntry, Set<String> knownPlayerNames)
+	{
+		try
+		{
+			String targetName = normalizePlayerName(menuEntry.getTarget()).toLowerCase(Locale.ENGLISH);
+			if (knownPlayerNames.contains(targetName))
+			{
+				return targetName;
+			}
+
+			String optionName = normalizePlayerName(menuEntry.getOption()).toLowerCase(Locale.ENGLISH);
+			if (knownPlayerNames.contains(optionName))
+			{
+				return optionName;
+			}
+		}
+		catch (Exception ignore)
+		{
+		}
+
+		return null;
+	}
+
+	private MenuEntry[] filterMenuEntriesForHighlightedPlayers(MenuEntry[] menuEntries)
+	{
+		Set<String> knownPlayerNames = getKnownPlayerNames();
+		if (knownPlayerNames.isEmpty())
+		{
+			return menuEntries;
+		}
+
+		Set<String> focusedPlayerNames = new LinkedHashSet<>();
+		for (MenuEntry menuEntry : menuEntries)
+		{
+			String playerName = getMenuEntryPlayerName(menuEntry, knownPlayerNames);
+			if (playerName == null)
+			{
+				continue;
+			}
+
+			HighlightStyle style = getMenuHighlightStyle(playerName);
+			if (style != null && style.isHideOtherPlayerMenus())
+			{
+				focusedPlayerNames.add(playerName);
+			}
+		}
+
+		if (focusedPlayerNames.isEmpty())
+		{
+			return menuEntries;
+		}
+
+		List<MenuEntry> filteredEntries = new ArrayList<>(menuEntries.length);
+		for (MenuEntry menuEntry : menuEntries)
+		{
+			String playerName = getMenuEntryPlayerName(menuEntry, knownPlayerNames);
+			if (playerName == null || focusedPlayerNames.contains(playerName))
+			{
+				filteredEntries.add(menuEntry);
+			}
+		}
+
+		return filteredEntries.toArray(new MenuEntry[0]);
 	}
 
 	private void addChatHighlightMenuEntry(String username, String target)
@@ -299,11 +419,11 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		}
 	}
 
-	private void addConfiguredHighlights(Map<String, HighlightStyle> configuredHighlights, String playerNames, Color highlightColor, boolean lineEnabled, boolean showName)
+	private void addConfiguredHighlights(Map<String, HighlightStyle> configuredHighlights, String playerNames, Color highlightColor, boolean lineEnabled, boolean showName, String menuOption, boolean highlightRegularMenuPlayerName, boolean hideOtherPlayerMenus)
 	{
 		for (String playerName : parseConfiguredNames(playerNames))
 		{
-			configuredHighlights.putIfAbsent(playerName.toLowerCase(Locale.ENGLISH), new HighlightStyle(highlightColor, lineEnabled, showName));
+			configuredHighlights.putIfAbsent(playerName.toLowerCase(Locale.ENGLISH), new HighlightStyle(highlightColor, lineEnabled, showName, menuOption, highlightRegularMenuPlayerName, hideOtherPlayerMenus));
 		}
 	}
 
@@ -332,15 +452,15 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		Map<String, HighlightStyle> configuredHighlights = new LinkedHashMap<>();
 		if (config.alwaysHighlightEnabledOne())
 		{
-			addConfiguredHighlights(configuredHighlights, config.alwaysHighlightPlayersOne(), config.alwaysHighlightColorOne(), config.alwaysHighlightLineOne(), config.alwaysHighlightShowNameOne());
+			addConfiguredHighlights(configuredHighlights, config.alwaysHighlightPlayersOne(), config.alwaysHighlightColorOne(), config.alwaysHighlightLineOne(), config.alwaysHighlightShowNameOne(), config.alwaysHighlightMenuOptionOne(), config.alwaysHighlightRegularMenuPlayerNameOne(), config.alwaysHighlightHideOtherPlayerMenusOne());
 		}
 		if (config.alwaysHighlightEnabledTwo())
 		{
-			addConfiguredHighlights(configuredHighlights, config.alwaysHighlightPlayersTwo(), config.alwaysHighlightColorTwo(), config.alwaysHighlightLineTwo(), config.alwaysHighlightShowNameTwo());
+			addConfiguredHighlights(configuredHighlights, config.alwaysHighlightPlayersTwo(), config.alwaysHighlightColorTwo(), config.alwaysHighlightLineTwo(), config.alwaysHighlightShowNameTwo(), config.alwaysHighlightMenuOptionTwo(), config.alwaysHighlightRegularMenuPlayerNameTwo(), config.alwaysHighlightHideOtherPlayerMenusTwo());
 		}
 		if (config.alwaysHighlightEnabledThree())
 		{
-			addConfiguredHighlights(configuredHighlights, config.alwaysHighlightPlayersThree(), config.alwaysHighlightColorThree(), config.alwaysHighlightLineThree(), config.alwaysHighlightShowNameThree());
+			addConfiguredHighlights(configuredHighlights, config.alwaysHighlightPlayersThree(), config.alwaysHighlightColorThree(), config.alwaysHighlightLineThree(), config.alwaysHighlightShowNameThree(), config.alwaysHighlightMenuOptionThree(), config.alwaysHighlightRegularMenuPlayerNameThree(), config.alwaysHighlightHideOtherPlayerMenusThree());
 		}
 		alwaysHighlightedPlayers = configuredHighlights;
 	}
@@ -436,16 +556,18 @@ public class ChatHighlightPlayerPlugin extends Plugin
 			}
 		}
 
-		for (MenuEntry menuEntry : client.getMenuEntries())
+		MenuEntry[] menuEntries = filterMenuEntriesForHighlightedPlayers(client.getMenuEntries());
+		for (MenuEntry menuEntry : menuEntries)
 		{
 			highlightMatchingMenuEntry(menuEntry);
 		}
+		client.setMenuEntries(menuEntries);
 	}
 
 	@Subscribe
 	public void onBeforeMenuRender(BeforeMenuRender event)
 	{
-		MenuEntry[] menuEntries = client.getMenuEntries();
+		MenuEntry[] menuEntries = filterMenuEntriesForHighlightedPlayers(client.getMenuEntries());
 		for (MenuEntry menuEntry : menuEntries)
 		{
 			highlightMatchingMenuEntry(menuEntry);

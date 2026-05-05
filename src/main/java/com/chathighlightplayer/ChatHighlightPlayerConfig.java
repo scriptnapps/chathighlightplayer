@@ -120,10 +120,46 @@ public interface ChatHighlightPlayerConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "temporaryHighlightRegularMenuPlayerName",
+			name = "Highlight menu player name",
+			description = "Color the player name in regular right-click menus",
+			position = 4,
+			section = TEMPORARY_HIGHLIGHT_SECTION
+	)
+	default boolean temporaryHighlightRegularMenuPlayerName()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "temporaryHideOtherPlayerMenus",
+			name = "Only show this player's menu",
+			description = "Hide menu entries for other players when this highlighted player is in the menu",
+			position = 5,
+			section = TEMPORARY_HIGHLIGHT_SECTION
+	)
+	default boolean temporaryHideOtherPlayerMenus()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "temporaryMenuOption",
+			name = "Menu option",
+			description = "Comma-separated menu options to color for temporarily highlighted players. Leave blank or use None to disable. Use * for any option",
+			position = 6,
+			section = TEMPORARY_HIGHLIGHT_SECTION
+	)
+	default String temporaryMenuOption()
+	{
+		return "Trade with";
+	}
+
+	@ConfigItem(
 			keyName = "showTemporaryPlayerName",
 			name = "Show name above head",
 			description = "Show the player name above the temporary highlight",
-			position = 4,
+			position = 7,
 			section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default boolean showTemporaryPlayerName()
@@ -216,6 +252,42 @@ public interface ChatHighlightPlayerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "alwaysHighlightRegularMenuPlayerNameOne",
+		name = "Highlight menu player name",
+		description = "Color player names in regular right-click menus for group 1",
+		position = 5,
+		section = ALWAYS_HIGHLIGHT_GROUP_ONE
+	)
+	default boolean alwaysHighlightRegularMenuPlayerNameOne()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "alwaysHighlightHideOtherPlayerMenusOne",
+		name = "Only show this player's menu",
+		description = "Hide menu entries for other players when group 1 players are in the menu",
+		position = 6,
+		section = ALWAYS_HIGHLIGHT_GROUP_ONE
+	)
+	default boolean alwaysHighlightHideOtherPlayerMenusOne()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "alwaysHighlightMenuOptionOne",
+		name = "Menu option",
+		description = "Comma-separated menu options to color for group 1. Leave blank or use None to disable. Use * for any option",
+		position = 7,
+		section = ALWAYS_HIGHLIGHT_GROUP_ONE
+	)
+	default String alwaysHighlightMenuOptionOne()
+	{
+		return "Trade with";
+	}
+
+	@ConfigItem(
 		keyName = "alwaysHighlightEnabledTwo",
 		name = "Enabled",
 		description = "Enable always-highlight group 2",
@@ -276,6 +348,42 @@ public interface ChatHighlightPlayerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "alwaysHighlightRegularMenuPlayerNameTwo",
+		name = "Highlight menu player name",
+		description = "Color player names in regular right-click menus for group 2",
+		position = 5,
+		section = ALWAYS_HIGHLIGHT_GROUP_TWO
+	)
+	default boolean alwaysHighlightRegularMenuPlayerNameTwo()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "alwaysHighlightHideOtherPlayerMenusTwo",
+		name = "Only show this player's menu",
+		description = "Hide menu entries for other players when group 2 players are in the menu",
+		position = 6,
+		section = ALWAYS_HIGHLIGHT_GROUP_TWO
+	)
+	default boolean alwaysHighlightHideOtherPlayerMenusTwo()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "alwaysHighlightMenuOptionTwo",
+		name = "Menu option",
+		description = "Comma-separated menu options to color for group 2. Leave blank or use None to disable. Use * for any option",
+		position = 7,
+		section = ALWAYS_HIGHLIGHT_GROUP_TWO
+	)
+	default String alwaysHighlightMenuOptionTwo()
+	{
+		return "Trade with";
+	}
+
+	@ConfigItem(
 		keyName = "alwaysHighlightEnabledThree",
 		name = "Enabled",
 		description = "Enable always-highlight group 3",
@@ -333,5 +441,41 @@ public interface ChatHighlightPlayerConfig extends Config
 	default boolean alwaysHighlightShowNameThree()
 	{
 		return true;
+	}
+
+	@ConfigItem(
+		keyName = "alwaysHighlightRegularMenuPlayerNameThree",
+		name = "Highlight menu player name",
+		description = "Color player names in regular right-click menus for group 3",
+		position = 5,
+		section = ALWAYS_HIGHLIGHT_GROUP_THREE
+	)
+	default boolean alwaysHighlightRegularMenuPlayerNameThree()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "alwaysHighlightHideOtherPlayerMenusThree",
+		name = "Only show this player's menu",
+		description = "Hide menu entries for other players when group 3 players are in the menu",
+		position = 6,
+		section = ALWAYS_HIGHLIGHT_GROUP_THREE
+	)
+	default boolean alwaysHighlightHideOtherPlayerMenusThree()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "alwaysHighlightMenuOptionThree",
+		name = "Menu option",
+		description = "Comma-separated menu options to color for group 3. Leave blank or use None to disable. Use * for any option",
+		position = 7,
+		section = ALWAYS_HIGHLIGHT_GROUP_THREE
+	)
+	default String alwaysHighlightMenuOptionThree()
+	{
+		return "Trade with";
 	}
 }

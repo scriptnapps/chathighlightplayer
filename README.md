@@ -11,6 +11,8 @@ Highlight players directly from chat and keep selected players highlighted with 
 - Can optionally hide the name above the player's head.
 - Can optionally add `Copy Username` to the chat right-click menu.
 - Colors matching player names in normal and condensed right-click menus.
+- Can color selected player menu options, such as `Trade with` or `Lookup`.
+- Can hide other players' menu entries when a highlighted player is present.
 
 ## Main Features
 
@@ -25,6 +27,9 @@ You can configure:
 - Line on/off
 - Show name above head
 - Condensed menu name highlighting
+- Regular menu name highlighting
+- Menu options to highlight
+- Only show this player's menu
 
 ### Always Highlight Groups
 
@@ -37,6 +42,8 @@ Each group has:
 - Its own color
 - Its own line toggle
 - Its own show-name toggle
+- Its own menu name and option highlighting
+- Its own toggle to hide other players' menu entries
 
 This makes it easy to separate players by purpose, for example:
 
