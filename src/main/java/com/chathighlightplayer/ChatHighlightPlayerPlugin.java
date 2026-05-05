@@ -36,8 +36,8 @@ import java.util.Set;
 
 @Slf4j
 @PluginDescriptor(
-		name = "Click Chat Highlight Player",
-		description = "Highlight Player when click on name in chat!"
+		name = "Chat Highlight Player",
+	description = "Highlight players by clicking their names in chat."
 )
 public class ChatHighlightPlayerPlugin extends Plugin
 {
