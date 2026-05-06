@@ -93,7 +93,7 @@ public interface ChatHighlightPlayerConfig extends Config
 	)
 	default int fadeDurationMs()
 	{
-		return 800;
+		return 400;
 	}
 
 	@ConfigItem(
