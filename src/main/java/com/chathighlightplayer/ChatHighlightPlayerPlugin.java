@@ -3,8 +3,12 @@ package com.chathighlightplayer;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.*;
+import net.runelite.api.Client;
+import net.runelite.api.MenuAction;
+import net.runelite.api.MenuEntry;
+import net.runelite.api.Player;
 import net.runelite.api.events.BeforeMenuRender;
+import net.runelite.api.events.GameTick;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.MenuOpened;
 import net.runelite.api.widgets.ComponentID;
@@ -16,13 +20,11 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.api.Client;
-import net.runelite.api.events.GameTick;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.Text;
 
-import java.awt.Toolkit;
 import java.awt.Color;
+import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +41,7 @@ import java.util.Set;
 		name = "Chat Highlight Player",
 	description = "Highlight players by clicking their names in chat."
 )
+@SuppressWarnings({"deprecation", "unused"})
 public class ChatHighlightPlayerPlugin extends Plugin
 {
 	@Inject
@@ -135,7 +138,6 @@ public class ChatHighlightPlayerPlugin extends Plugin
 
 	private void setHighlightPlayer(String playerName) {
 		targetPlayerName = "";
-		log.info("tagging" + playerName);
 		targetPlayerName = normalizePlayerName(playerName);
 		startTime = System.currentTimeMillis();
 		isActive = true;
@@ -176,7 +178,7 @@ public class ChatHighlightPlayerPlugin extends Plugin
 			return null;
 		}
 
-		if (isHighlightActive() && targetPlayerName != null && playerName.equalsIgnoreCase(targetPlayerName))
+		if (isHighlightActive() && playerName.equalsIgnoreCase(targetPlayerName))
 		{
 			return new HighlightStyle(color, showline, config.showTemporaryPlayerName(), config.temporaryMenuOption(), config.temporaryHighlightRegularMenuPlayerName(), config.temporaryHideOtherPlayerMenus());
 		}
@@ -225,16 +227,8 @@ public class ChatHighlightPlayerPlugin extends Plugin
 
 	private void highlightMatchingMenuEntry(MenuEntry menuEntry)
 	{
-		String optionName = "";
-		String targetName = "";
-		try
-		{
-			optionName = normalizePlayerName(menuEntry.getOption());
-			targetName = normalizePlayerName(menuEntry.getTarget());
-		}
-		catch (Exception ignore)
-		{
-		}
+		String optionName = normalizePlayerName(menuEntry.getOption());
+		String targetName = normalizePlayerName(menuEntry.getTarget());
 
 		HighlightStyle optionStyle = getMenuHighlightStyle(optionName);
 		HighlightStyle targetStyle = getMenuHighlightStyle(targetName);
@@ -276,22 +270,16 @@ public class ChatHighlightPlayerPlugin extends Plugin
 
 	private String getMenuEntryPlayerName(MenuEntry menuEntry, Set<String> knownPlayerNames)
 	{
-		try
+		String targetName = normalizePlayerName(menuEntry.getTarget()).toLowerCase(Locale.ENGLISH);
+		if (knownPlayerNames.contains(targetName))
 		{
-			String targetName = normalizePlayerName(menuEntry.getTarget()).toLowerCase(Locale.ENGLISH);
-			if (knownPlayerNames.contains(targetName))
-			{
-				return targetName;
-			}
-
-			String optionName = normalizePlayerName(menuEntry.getOption()).toLowerCase(Locale.ENGLISH);
-			if (knownPlayerNames.contains(optionName))
-			{
-				return optionName;
-			}
+			return targetName;
 		}
-		catch (Exception ignore)
+
+		String optionName = normalizePlayerName(menuEntry.getOption()).toLowerCase(Locale.ENGLISH);
+		if (knownPlayerNames.contains(optionName))
 		{
+			return optionName;
 		}
 
 		return null;
@@ -390,17 +378,17 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		return REPORT.equals(menuEntry.getOption()) && isChatboxMessageEntry(menuEntry.getParam1());
 	}
 
-	private boolean hasMenuEntryContaining(String text)
+	private boolean isMenuEntryMissing(String text)
 	{
 		for (MenuEntry menuEntry : client.getMenu().getMenuEntries())
 		{
 			if (menuEntry.getOption().contains(text))
 			{
-				return true;
+				return false;
 			}
 		}
 
-		return false;
+		return true;
 	}
 
 	private void maybeAddChatMenuEntries(String username, String target, boolean includeHighlightEntry)
@@ -410,12 +398,12 @@ public class ChatHighlightPlayerPlugin extends Plugin
 			return;
 		}
 
-		if (includeHighlightEntry && !hasMenuEntryContaining("Highlight Player"))
+		if (includeHighlightEntry && isMenuEntryMissing("Highlight Player"))
 		{
 			addChatHighlightMenuEntry(username, target);
 		}
 
-		if (config.copyUsernameToClipboard() && !hasMenuEntryContaining(COPY_USERNAME))
+		if (config.copyUsernameToClipboard() && isMenuEntryMissing(COPY_USERNAME))
 		{
 			addCopyUsernameMenuEntry(username, target);
 		}
@@ -514,7 +502,7 @@ public class ChatHighlightPlayerPlugin extends Plugin
 
 		if (entry.getOption().toLowerCase().contains(TRADE.toLowerCase()) ) {
 			String username = cleanPlayerName(entry.getTarget());
-			if (!hasMenuEntryContaining("Highlight Player"))
+			if (isMenuEntryMissing("Highlight Player"))
 			{
 				Color customColor = config.tagColor();
 				String hexColor = colorToHex(customColor);
@@ -524,7 +512,7 @@ public class ChatHighlightPlayerPlugin extends Plugin
 						.setType(MenuAction.WIDGET_SECOND_OPTION)
 						.onClick(e -> setHighlightPlayer(username));
 			}
-			if (config.copyUsernameToClipboard() && !hasMenuEntryContaining(COPY_USERNAME))
+			if (config.copyUsernameToClipboard() && isMenuEntryMissing(COPY_USERNAME))
 			{
 				addCopyUsernameMenuEntry(username, entry.getTarget());
 			}
@@ -578,13 +566,18 @@ public class ChatHighlightPlayerPlugin extends Plugin
 	}
 
 	private String cleanPlayerName(String name) {
+		if (name == null)
+		{
+			return "";
+		}
+
 		return Text.removeTags(name)
 				.replace('\u00A0', ' ')
 				.trim();
 	}
 
 	@Override
-	protected void startUp() throws Exception
+	protected void startUp()
 	{
 		log.info("ChatHighlightPlayerPlugin started!");
 		rebuildAlwaysHighlightCache();
@@ -595,7 +588,7 @@ public class ChatHighlightPlayerPlugin extends Plugin
 	}
 
 	@Override
-	protected void shutDown() throws Exception
+	protected void shutDown()
 	{
 		overlayManager.remove(overlay);
 		log.info("ChatHighlightPlayerPlugin stopped!");

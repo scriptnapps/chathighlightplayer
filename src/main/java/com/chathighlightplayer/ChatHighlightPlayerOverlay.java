@@ -1,18 +1,22 @@
 package com.chathighlightplayer;
 
 import net.runelite.api.Client;
+import net.runelite.api.Point;
 import net.runelite.api.Perspective;
 import net.runelite.api.Player;
+import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayUtil;
-import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.coords.LocalPoint;
-import net.runelite.api.Point;
 
 import javax.inject.Inject;
-import java.awt.*;
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Composite;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -43,7 +47,7 @@ public class ChatHighlightPlayerOverlay extends Overlay {
 		setLayer(OverlayLayer.UNDER_WIDGETS);
     }
 
-    public void setHighlightedPlayers(Map<Player, HighlightStyle> highlightedPlayers) {
+    void setHighlightedPlayers(Map<Player, HighlightStyle> highlightedPlayers) {
         long now = System.currentTimeMillis();
         Map<String, RenderedHighlight> updatedHighlights = new LinkedHashMap<>();
 
@@ -73,18 +77,18 @@ public class ChatHighlightPlayerOverlay extends Overlay {
         this.highlightedPlayers = updatedHighlights;
     }
 
-    public void setTrimLines(boolean trimLines) {
+    void setTrimLines(boolean trimLines) {
         this.trimLines = trimLines;
     }
 
-    public void setFadeHighlights(boolean fadeHighlights) {
+    void setFadeHighlights(boolean fadeHighlights) {
         this.fadeHighlights = fadeHighlights;
         if (!fadeHighlights) {
             fadingPlayers.clear();
         }
     }
 
-    public void setFadeDurationMs(int fadeDurationMs) {
+    void setFadeDurationMs(int fadeDurationMs) {
         this.fadeDurationMs = clamp(fadeDurationMs, MIN_FADE_DURATION_MS, MAX_FADE_DURATION_MS);
     }
 
@@ -126,8 +130,10 @@ public class ChatHighlightPlayerOverlay extends Overlay {
             LocalPoint myLocalPos = LocalPoint.fromWorld(client, myWorldPos);
 
             if (myLocalPos != null && targetLocalPos != null) {
-                Point myScreenPos = Perspective.localToCanvas(client, myLocalPos, client.getPlane());
-                Point targetScreenPos = Perspective.localToCanvas(client, targetLocalPos, client.getPlane());
+                @SuppressWarnings("deprecation")
+                int plane = client.getPlane();
+                Point myScreenPos = Perspective.localToCanvas(client, myLocalPos, plane);
+                Point targetScreenPos = Perspective.localToCanvas(client, targetLocalPos, plane);
 
                 if (myScreenPos != null && targetScreenPos != null) {
                     graphics.setColor(color);
