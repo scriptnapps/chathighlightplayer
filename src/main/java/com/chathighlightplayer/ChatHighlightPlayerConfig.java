@@ -72,6 +72,30 @@ public interface ChatHighlightPlayerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "fadeHighlights",
+		name = "Fade highlights",
+		description = "Fade highlights out when they are removed",
+		position = 1,
+		section = GENERAL_SECTION
+	)
+	default boolean fadeHighlights()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "fadeDurationMs",
+		name = "Fade duration (ms)",
+		description = "Highlight fade duration in milliseconds. Values are clamped from 100 to 2000",
+		position = 2,
+		section = GENERAL_SECTION
+	)
+	default int fadeDurationMs()
+	{
+		return 800;
+	}
+
+	@ConfigItem(
 		keyName = "time",
 		name = "Duration (seconds)",
 		description = "Time to show the temporary player highlight in seconds",

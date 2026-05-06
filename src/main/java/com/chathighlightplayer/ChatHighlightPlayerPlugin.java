@@ -82,6 +82,8 @@ public class ChatHighlightPlayerPlugin extends Plugin
 
 		rebuildAlwaysHighlightCache();
 		overlay.setTrimLines(config.trimHighlightLines());
+		overlay.setFadeHighlights(config.fadeHighlights());
+		overlay.setFadeDurationMs(config.fadeDurationMs());
 		initiatehighlight();
 	}
 
@@ -587,6 +589,8 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		log.info("ChatHighlightPlayerPlugin started!");
 		rebuildAlwaysHighlightCache();
 		overlay.setTrimLines(config.trimHighlightLines());
+		overlay.setFadeHighlights(config.fadeHighlights());
+		overlay.setFadeDurationMs(config.fadeDurationMs());
 		overlayManager.add(overlay);
 	}
 
