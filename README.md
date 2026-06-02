@@ -1,53 +1,30 @@
 # Chat Highlight Player
 
-Highlight players directly from chat and keep selected players highlighted with separate colors and rules.
+Highlight players directly from chat. Temporarily highlight a player from the chat menu; persistent always-highlight groups have been removed.
 
 ## What It Does
 
-- Adds a `Highlight Player` option when you right-click usernames in chat.
-- Temporarily highlights the selected player in-game.
-- Supports persistent always-highlight groups with separate colors.
-- Draws player outlines, minimap dots, and optional lines.
-- Can optionally hide the name above the player's head.
-- Can optionally add `Copy Username` to the chat right-click menu.
+- Adds a "Highlight Player" option when you right-click usernames in chat (always available).
+- Optional hover tooltip in chat (configurable).
+- Temporarily highlights the selected player in-game (outline, minimap dot, optional line and name).
 - Colors matching player names in normal and condensed right-click menus.
-- Can color selected player menu options, such as `Trade with` or `Lookup`.
-- Can hide other players' menu entries when a highlighted player is present.
+- Can color selected player menu options (default: "Trade with,").
+- Can hide other players' menu entries when the highlighted player is present.
 
 ## Main Features
 
-### Temporary Highlight
+### Player Highlight
 
-Use the chat menu to highlight a player for a set duration.
+Use the chat menu to highlight a player for a preset duration.
 
 You can configure:
 
-- Duration
+- Duration (preset): 5, 10, 15, 20, 30, 45, 60 seconds (default: 10)
 - Color
 - Line on/off
 - Show name above head
 - Condensed menu name highlighting
 - Regular menu name highlighting
-- Menu options to highlight
+- Menu options to highlight (comma-separated, default: "Trade with,")
 - Only show this player's menu
 
-### Always Highlight Groups
-
-The plugin includes 3 separate always-highlight groups.
-
-Each group has:
-
-- Its own enable toggle
-- A comma-separated player list
-- Its own color
-- Its own line toggle
-- Its own show-name toggle
-- Its own menu name and option highlighting
-- Its own toggle to hide other players' menu entries
-
-This makes it easy to separate players by purpose, for example:
-
-- Friends
-- Raid teammates
-- Frequently traded players
-- Players you want to avoid
