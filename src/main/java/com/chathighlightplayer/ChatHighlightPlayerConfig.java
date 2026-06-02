@@ -14,9 +14,6 @@ public interface ChatHighlightPlayerConfig extends Config
 	String TEMPORARY_HIGHLIGHT_SECTION = "temporaryHighlight";
 	String CHATBOX_SECTION = "chatboxMenu";
 	String GENERAL_SECTION = "general";
-	String ALWAYS_HIGHLIGHT_GROUP_ONE = "alwaysHighlightGroupOne";
-	String ALWAYS_HIGHLIGHT_GROUP_TWO = "alwaysHighlightGroupTwo";
-	String ALWAYS_HIGHLIGHT_GROUP_THREE = "alwaysHighlightGroupThree";
 
 	@ConfigSection(
 		name = "General",
@@ -26,8 +23,8 @@ public interface ChatHighlightPlayerConfig extends Config
 	String generalSection = GENERAL_SECTION;
 
 	@ConfigSection(
-		name = "Temporary Highlight",
-		description = "Options for click-to-highlight behavior",
+		name = "Player Highlight",
+		description = "Options for player highlight behavior",
 		position = 2
 	)
 	String temporaryHighlightSection = TEMPORARY_HIGHLIGHT_SECTION;
@@ -38,27 +35,6 @@ public interface ChatHighlightPlayerConfig extends Config
 		position = 1
 	)
 	String chatboxSection = CHATBOX_SECTION;
-
-	@ConfigSection(
-		name = "Always Highlight Group 1",
-		description = "Persistently highlight a list of players",
-		position = 3
-	)
-	String alwaysHighlightGroupOneSection = ALWAYS_HIGHLIGHT_GROUP_ONE;
-
-	@ConfigSection(
-		name = "Always Highlight Group 2",
-		description = "Persistently highlight a second list of players",
-		position = 4
-	)
-	String alwaysHighlightGroupTwoSection = ALWAYS_HIGHLIGHT_GROUP_TWO;
-
-	@ConfigSection(
-		name = "Always Highlight Group 3",
-		description = "Persistently highlight a third list of players",
-		position = 5
-	)
-	String alwaysHighlightGroupThreeSection = ALWAYS_HIGHLIGHT_GROUP_THREE;
 
 	@ConfigItem(
 		keyName = "trimHighlightLines",
@@ -96,22 +72,46 @@ public interface ChatHighlightPlayerConfig extends Config
 		return 400;
 	}
 
+	/* Available fixed durations for temporary highlight */
+	enum HighlightDuration
+	{
+		S5(5), S10(10), S15(15), S20(20), S30(30), S45(45), S60(60);
+
+		private final int seconds;
+
+		HighlightDuration(int seconds)
+		{
+			this.seconds = seconds;
+		}
+
+		public int seconds()
+		{
+			return seconds;
+		}
+
+		@Override
+		public String toString()
+		{
+			return Integer.toString(seconds);
+		}
+	}
+
 	@ConfigItem(
-		keyName = "time",
+		keyName = "duration",
 		name = "Duration (seconds)",
-		description = "Time to show the temporary player highlight in seconds",
+		description = "Duration for player highlight (select from preset values)",
 		position = 0,
 		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
-	default int time()
+	default HighlightDuration duration()
 	{
-		return 10;
+		return HighlightDuration.S10;
 	}
 
 	@ConfigItem(
 			keyName = "tagColor",
 			name = "Color",
-			description = "Color used for temporary player highlights",
+				description = "Color used for player highlights",
 			position = 1,
 			section = TEMPORARY_HIGHLIGHT_SECTION
 	)
@@ -123,7 +123,7 @@ public interface ChatHighlightPlayerConfig extends Config
 	@ConfigItem(
 			keyName = "showline",
 			name = "Line enabled",
-			description = "Draw a line to the temporarily highlighted player",
+				description = "Draw a line to the highlighted player",
 			position = 2,
 			section = TEMPORARY_HIGHLIGHT_SECTION
 	)
@@ -135,7 +135,7 @@ public interface ChatHighlightPlayerConfig extends Config
 	@ConfigItem(
 			keyName = "highlightCondensedPlayerName",
 			name = "Highlight condensed player name",
-			description = "Color the player name in condensed player option menus",
+				description = "Color the player name in condensed player option menus when highlighted",
 			position = 3,
 			section = TEMPORARY_HIGHLIGHT_SECTION
 	)
@@ -147,7 +147,7 @@ public interface ChatHighlightPlayerConfig extends Config
 	@ConfigItem(
 			keyName = "temporaryHighlightRegularMenuPlayerName",
 			name = "Highlight menu player name",
-			description = "Color the player name in regular right-click menus",
+				description = "Color the player name in regular right-click menus when highlighted",
 			position = 4,
 			section = TEMPORARY_HIGHLIGHT_SECTION
 	)
@@ -159,7 +159,7 @@ public interface ChatHighlightPlayerConfig extends Config
 	@ConfigItem(
 			keyName = "temporaryHideOtherPlayerMenus",
 			name = "Only show this player's menu",
-			description = "Hide menu entries for other players when this highlighted player is in the menu",
+				description = "Hide menu entries for other players when the highlighted player is in the menu",
 			position = 5,
 			section = TEMPORARY_HIGHLIGHT_SECTION
 	)
@@ -171,19 +171,19 @@ public interface ChatHighlightPlayerConfig extends Config
 	@ConfigItem(
 			keyName = "temporaryMenuOption",
 			name = "Menu option",
-			description = "Comma-separated menu options to color for temporarily highlighted players. Leave blank or use None to disable. Use * for any option",
+				description = "Comma-separated menu options to color for highlighted players. Leave blank or use None to disable. Use * for any option",
 			position = 6,
 			section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default String temporaryMenuOption()
 	{
-		return "Trade with";
+		return "Trade with,";
 	}
 
 	@ConfigItem(
 			keyName = "showTemporaryPlayerName",
 			name = "Show name above head",
-			description = "Show the player name above the temporary highlight",
+				description = "Show the player name above the highlight",
 			position = 7,
 			section = TEMPORARY_HIGHLIGHT_SECTION
 	)
@@ -204,303 +204,4 @@ public interface ChatHighlightPlayerConfig extends Config
 		return true;
 	}
 
-	@ConfigItem(
-			keyName = "copyUsernameToClipboard",
-			name = "Copy username to clipboard",
-			description = "Show a Copy Username option when right-clicking usernames in chat",
-			position = 1,
-			section = CHATBOX_SECTION
-	)
-	default boolean copyUsernameToClipboard()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightEnabledOne",
-		name = "Enabled",
-		description = "Enable always-highlight group 1",
-		position = 0,
-		section = ALWAYS_HIGHLIGHT_GROUP_ONE
-	)
-	default boolean alwaysHighlightEnabledOne()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightPlayersOne",
-		name = "Player names",
-		description = "Comma-separated list of player names to always highlight",
-		position = 1,
-		section = ALWAYS_HIGHLIGHT_GROUP_ONE
-	)
-	default String alwaysHighlightPlayersOne()
-	{
-		return "";
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightColorOne",
-		name = "Color",
-		description = "Color used for always-highlight group 1",
-		position = 2,
-		section = ALWAYS_HIGHLIGHT_GROUP_ONE
-	)
-	default Color alwaysHighlightColorOne()
-	{
-		return Color.GREEN;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightLineOne",
-		name = "Line enabled",
-		description = "Draw a line to players in always-highlight group 1",
-		position = 3,
-		section = ALWAYS_HIGHLIGHT_GROUP_ONE
-	)
-	default boolean alwaysHighlightLineOne()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightShowNameOne",
-		name = "Show name above head",
-		description = "Show player names above players in always-highlight group 1",
-		position = 4,
-		section = ALWAYS_HIGHLIGHT_GROUP_ONE
-	)
-	default boolean alwaysHighlightShowNameOne()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightRegularMenuPlayerNameOne",
-		name = "Highlight menu player name",
-		description = "Color player names in regular right-click menus for group 1",
-		position = 5,
-		section = ALWAYS_HIGHLIGHT_GROUP_ONE
-	)
-	default boolean alwaysHighlightRegularMenuPlayerNameOne()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightHideOtherPlayerMenusOne",
-		name = "Only show this player's menu",
-		description = "Hide menu entries for other players when group 1 players are in the menu",
-		position = 6,
-		section = ALWAYS_HIGHLIGHT_GROUP_ONE
-	)
-	default boolean alwaysHighlightHideOtherPlayerMenusOne()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightMenuOptionOne",
-		name = "Menu option",
-		description = "Comma-separated menu options to color for group 1. Leave blank or use None to disable. Use * for any option",
-		position = 7,
-		section = ALWAYS_HIGHLIGHT_GROUP_ONE
-	)
-	default String alwaysHighlightMenuOptionOne()
-	{
-		return "Trade with";
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightEnabledTwo",
-		name = "Enabled",
-		description = "Enable always-highlight group 2",
-		position = 0,
-		section = ALWAYS_HIGHLIGHT_GROUP_TWO
-	)
-	default boolean alwaysHighlightEnabledTwo()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightPlayersTwo",
-		name = "Player names",
-		description = "Comma-separated list of player names to always highlight",
-		position = 1,
-		section = ALWAYS_HIGHLIGHT_GROUP_TWO
-	)
-	default String alwaysHighlightPlayersTwo()
-	{
-		return "";
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightColorTwo",
-		name = "Color",
-		description = "Color used for always-highlight group 2",
-		position = 2,
-		section = ALWAYS_HIGHLIGHT_GROUP_TWO
-	)
-	default Color alwaysHighlightColorTwo()
-	{
-		return Color.RED;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightLineTwo",
-		name = "Line enabled",
-		description = "Draw a line to players in always-highlight group 2",
-		position = 3,
-		section = ALWAYS_HIGHLIGHT_GROUP_TWO
-	)
-	default boolean alwaysHighlightLineTwo()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightShowNameTwo",
-		name = "Show name above head",
-		description = "Show player names above players in always-highlight group 2",
-		position = 4,
-		section = ALWAYS_HIGHLIGHT_GROUP_TWO
-	)
-	default boolean alwaysHighlightShowNameTwo()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightRegularMenuPlayerNameTwo",
-		name = "Highlight menu player name",
-		description = "Color player names in regular right-click menus for group 2",
-		position = 5,
-		section = ALWAYS_HIGHLIGHT_GROUP_TWO
-	)
-	default boolean alwaysHighlightRegularMenuPlayerNameTwo()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightHideOtherPlayerMenusTwo",
-		name = "Only show this player's menu",
-		description = "Hide menu entries for other players when group 2 players are in the menu",
-		position = 6,
-		section = ALWAYS_HIGHLIGHT_GROUP_TWO
-	)
-	default boolean alwaysHighlightHideOtherPlayerMenusTwo()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightMenuOptionTwo",
-		name = "Menu option",
-		description = "Comma-separated menu options to color for group 2. Leave blank or use None to disable. Use * for any option",
-		position = 7,
-		section = ALWAYS_HIGHLIGHT_GROUP_TWO
-	)
-	default String alwaysHighlightMenuOptionTwo()
-	{
-		return "Trade with";
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightEnabledThree",
-		name = "Enabled",
-		description = "Enable always-highlight group 3",
-		position = 0,
-		section = ALWAYS_HIGHLIGHT_GROUP_THREE
-	)
-	default boolean alwaysHighlightEnabledThree()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightPlayersThree",
-		name = "Player names",
-		description = "Comma-separated list of player names to always highlight",
-		position = 1,
-		section = ALWAYS_HIGHLIGHT_GROUP_THREE
-	)
-	default String alwaysHighlightPlayersThree()
-	{
-		return "";
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightColorThree",
-		name = "Color",
-		description = "Color used for always-highlight group 3",
-		position = 2,
-		section = ALWAYS_HIGHLIGHT_GROUP_THREE
-	)
-	default Color alwaysHighlightColorThree()
-	{
-		return Color.CYAN;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightLineThree",
-		name = "Line enabled",
-		description = "Draw a line to players in always-highlight group 3",
-		position = 3,
-		section = ALWAYS_HIGHLIGHT_GROUP_THREE
-	)
-	default boolean alwaysHighlightLineThree()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightShowNameThree",
-		name = "Show name above head",
-		description = "Show player names above players in always-highlight group 3",
-		position = 4,
-		section = ALWAYS_HIGHLIGHT_GROUP_THREE
-	)
-	default boolean alwaysHighlightShowNameThree()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightRegularMenuPlayerNameThree",
-		name = "Highlight menu player name",
-		description = "Color player names in regular right-click menus for group 3",
-		position = 5,
-		section = ALWAYS_HIGHLIGHT_GROUP_THREE
-	)
-	default boolean alwaysHighlightRegularMenuPlayerNameThree()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightHideOtherPlayerMenusThree",
-		name = "Only show this player's menu",
-		description = "Hide menu entries for other players when group 3 players are in the menu",
-		position = 6,
-		section = ALWAYS_HIGHLIGHT_GROUP_THREE
-	)
-	default boolean alwaysHighlightHideOtherPlayerMenusThree()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "alwaysHighlightMenuOptionThree",
-		name = "Menu option",
-		description = "Comma-separated menu options to color for group 3. Leave blank or use None to disable. Use * for any option",
-		position = 7,
-		section = ALWAYS_HIGHLIGHT_GROUP_THREE
-	)
-	default String alwaysHighlightMenuOptionThree()
-	{
-		return "Trade with";
-	}
 }
