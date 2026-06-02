@@ -19,7 +19,7 @@ Use the chat menu to highlight a player for a preset duration.
 
 You can configure:
 
-- Duration (preset): 5, 10, 15, 20, 30, 45, 60 seconds (default: 10)
+- Duration (preset): 0, 5, 10, 15, 20, 30, 45, 60, 90, 120 seconds (default: 10)"
 - Color
 - Line on/off
 - Show name above head

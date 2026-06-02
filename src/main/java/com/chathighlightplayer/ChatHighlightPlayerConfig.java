@@ -75,7 +75,7 @@ public interface ChatHighlightPlayerConfig extends Config
 	/* Available fixed durations for temporary highlight */
 	enum HighlightDuration
 	{
-		S5(5), S10(10), S15(15), S20(20), S30(30), S45(45), S60(60);
+		S0(0), S5(5), S10(10), S15(15), S20(20), S30(30), S45(45), S60(60), S90(90), S120(120);
 
 		private final int seconds;
 

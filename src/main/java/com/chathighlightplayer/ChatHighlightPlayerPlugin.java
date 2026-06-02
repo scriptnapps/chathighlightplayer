@@ -55,12 +55,12 @@ public class ChatHighlightPlayerPlugin extends Plugin
 	private ChatHighlightPlayerOverlay overlay;
 
 	private String targetPlayerName;
-	private long durationMs = 10;
+	private long durationSeconds = 10;
 	private Color color = Color.pink;
 
 	private long startTime = 0;
 	private boolean isActive = false;
-	private boolean showline = true;
+	private boolean showLine = true;
 
 	private static final String REPORT = "Report";
 	private static final String TRADE = "Accept trade";
@@ -92,12 +92,12 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		}
 
 		long currentTime = System.currentTimeMillis();
-long effectiveDuration = Math.max(0, Math.min(durationMs, 60)); // enforce max 60s regardless of config
-if (currentTime >= startTime + effectiveDuration * 1000)
-{
-	isActive = false;
-	return false;
-}
+			long effectiveDuration = Math.max(0, Math.min(durationSeconds, 120)); // enforce max 120s regardless of config
+			if (currentTime >= startTime + effectiveDuration * 1000)
+			{
+				isActive = false;
+				return false;
+			}
 		return true;
 	}
 
@@ -110,7 +110,7 @@ if (currentTime >= startTime + effectiveDuration * 1000)
 		}
 		Map<Player, HighlightStyle> highlightedPlayers = new LinkedHashMap<>();
 		String targetNormalized = targetPlayerName.toLowerCase(Locale.ENGLISH);
-		HighlightStyle tempStyle = new HighlightStyle(color, showline, config.showTemporaryPlayerName(), config.temporaryMenuOption(), config.temporaryHighlightRegularMenuPlayerName(), config.temporaryHideOtherPlayerMenus());
+		HighlightStyle tempStyle = new HighlightStyle(color, showLine, config.showTemporaryPlayerName(), config.temporaryMenuOption(), config.temporaryHighlightRegularMenuPlayerName(), config.temporaryHideOtherPlayerMenus());
 		for (Player player : client.getPlayers()) {
 			if (player == null || player.getName() == null) {
 				continue;
@@ -127,9 +127,9 @@ if (currentTime >= startTime + effectiveDuration * 1000)
 		targetPlayerName = normalizePlayerName(playerName);
 		startTime = System.currentTimeMillis();
 		isActive = true;
-		showline = config.line();
+		showLine = config.line();
 		// Use selected preset duration (seconds)
-		durationMs = config.duration().seconds();
+		durationSeconds = config.duration().seconds();
 		color = config.tagColor();
 		initiatehighlight();
 	}
@@ -164,7 +164,7 @@ if (currentTime >= startTime + effectiveDuration * 1000)
 		}
 		if (isHighlightActive() && playerName.equalsIgnoreCase(targetPlayerName))
 		{
-			return new HighlightStyle(color, showline, config.showTemporaryPlayerName(), config.temporaryMenuOption(), config.temporaryHighlightRegularMenuPlayerName(), config.temporaryHideOtherPlayerMenus());
+			return new HighlightStyle(color, showLine, config.showTemporaryPlayerName(), config.temporaryMenuOption(), config.temporaryHighlightRegularMenuPlayerName(), config.temporaryHideOtherPlayerMenus());
 		}
 		return null;
 	}
@@ -347,10 +347,11 @@ if (currentTime >= startTime + effectiveDuration * 1000)
 		{
 			return;
 		}
-if (includeHighlightEntry && isMenuEntryMissing("Highlight Player"))
-{
-	addChatHighlightMenuEntry(username, target);
-}	}
+		if (includeHighlightEntry && isMenuEntryMissing("Highlight Player"))
+	{
+		addChatHighlightMenuEntry(username, target);
+	}
+}
 	private String cleanPlayerName(String name) {
 		if (name == null)
 		{
@@ -364,10 +365,11 @@ if (includeHighlightEntry && isMenuEntryMissing("Highlight Player"))
 
 private String normalizePlayerName(String name)
 {
-return cleanPlayerName(name)
-	.replaceAll("\\s*\\(level-\\d+\\)$", "")
-	.trim();
-}	@Override
+	return cleanPlayerName(name)
+		.replaceAll("\\s*\\(level-\\d+\\)$", "")
+		.trim();
+}
+	@Override
 	protected void startUp()
 	{
 		log.info("ChatHighlightPlayerPlugin started!");
