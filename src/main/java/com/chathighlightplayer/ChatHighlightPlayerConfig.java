@@ -109,11 +109,11 @@ public interface ChatHighlightPlayerConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "tagColor",
-			name = "Color",
-				description = "Color used for player highlights",
-			position = 1,
-			section = TEMPORARY_HIGHLIGHT_SECTION
+		keyName = "tagColor",
+		name = "Color",
+		description = "Color used for player highlights",
+		position = 1,
+		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default Color tagColor()
 	{
@@ -121,11 +121,11 @@ public interface ChatHighlightPlayerConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "showline",
-			name = "Line enabled",
-				description = "Draw a line to the highlighted player",
-			position = 2,
-			section = TEMPORARY_HIGHLIGHT_SECTION
+		keyName = "showline",
+		name = "Line enabled",
+		description = "Draw a line to the highlighted player",
+		position = 2,
+		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default boolean line()
 	{
@@ -133,11 +133,11 @@ public interface ChatHighlightPlayerConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "highlightCondensedPlayerName",
-			name = "Highlight condensed player name",
-				description = "Color the player name in condensed player option menus when highlighted",
-			position = 3,
-			section = TEMPORARY_HIGHLIGHT_SECTION
+		keyName = "highlightCondensedPlayerName",
+		name = "Highlight condensed player name",
+		description = "Color the player name in condensed player option menus when highlighted",
+		position = 3,
+		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default boolean highlightCondensedPlayerName()
 	{
@@ -145,11 +145,11 @@ public interface ChatHighlightPlayerConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "temporaryHighlightRegularMenuPlayerName",
-			name = "Highlight menu player name",
-				description = "Color the player name in regular right-click menus when highlighted",
-			position = 4,
-			section = TEMPORARY_HIGHLIGHT_SECTION
+		keyName = "temporaryHighlightRegularMenuPlayerName",
+		name = "Highlight menu player name",
+		description = "Color the player name in regular right-click menus when highlighted",
+		position = 4,
+		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default boolean temporaryHighlightRegularMenuPlayerName()
 	{
@@ -157,11 +157,11 @@ public interface ChatHighlightPlayerConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "temporaryHideOtherPlayerMenus",
-			name = "Only show this player's menu",
-				description = "Hide menu entries for other players when the highlighted player is in the menu",
-			position = 5,
-			section = TEMPORARY_HIGHLIGHT_SECTION
+		keyName = "temporaryHideOtherPlayerMenus",
+		name = "Only show this player's menu",
+		description = "Hide menu entries for other players when the highlighted player is in the menu",
+		position = 5,
+		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default boolean temporaryHideOtherPlayerMenus()
 	{
@@ -169,11 +169,11 @@ public interface ChatHighlightPlayerConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "temporaryMenuOption",
-			name = "Menu option",
-				description = "Comma-separated menu options to color for highlighted players. Leave blank or use None to disable. Use * for any option",
-			position = 6,
-			section = TEMPORARY_HIGHLIGHT_SECTION
+		keyName = "temporaryMenuOption",
+		name = "Menu option",
+		description = "Comma-separated menu options to color for highlighted players. Leave blank or use None to disable. Use * for any option",
+		position = 6,
+		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default String temporaryMenuOption()
 	{
@@ -181,11 +181,11 @@ public interface ChatHighlightPlayerConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "showTemporaryPlayerName",
-			name = "Show name above head",
-				description = "Show the player name above the highlight",
-			position = 7,
-			section = TEMPORARY_HIGHLIGHT_SECTION
+		keyName = "showTemporaryPlayerName",
+		name = "Show name above head",
+		description = "Show the player name above the highlight",
+		position = 7,
+		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default boolean showTemporaryPlayerName()
 	{
@@ -193,11 +193,11 @@ public interface ChatHighlightPlayerConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "showHoverHighlight",
-			name = "Show hover tooltip (chatbox)",
-			description = "Show or hide the Highlight Player tooltip when hovering over the chatbox",
-			position = 0,
-			section = CHATBOX_SECTION
+		keyName = "showHoverHighlight",
+		name = "Show hover tooltip (chatbox)",
+		description = "Show or hide the Highlight Player tooltip when hovering over the chatbox",
+		position = 0,
+		section = CHATBOX_SECTION
 	)
 	default boolean showHoverHighlight()
 	{

@@ -65,7 +65,8 @@ public class ChatHighlightPlayerPlugin extends Plugin
 	private static final String REPORT = "Report";
 	private static final String TRADE = "Accept trade";
 	private static final String CONFIG_GROUP = "chathighlightplayer";
-	@Subscribe
+
+	@Subscribe
 	public void onGameTick(GameTick event) {
 		initiatehighlight();
 	}
@@ -92,13 +93,14 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		}
 
 		long currentTime = System.currentTimeMillis();
-			long effectiveDuration = Math.max(0, Math.min(durationSeconds, 120)); // enforce max 120s regardless of config
-			if (currentTime >= startTime + effectiveDuration * 1000)
-			{
-				isActive = false;
-				return false;
-			}
-		return true;
+		long effectiveDuration = Math.max(0, Math.min(durationSeconds, 120)); // enforce max 120s regardless of config
+		if (currentTime >= startTime + effectiveDuration * 1000)
+		{
+			isActive = false;
+			return false;
+		}
+
+		return true;
 	}
 
 	private void initiatehighlight(){
@@ -108,18 +110,21 @@ public class ChatHighlightPlayerPlugin extends Plugin
 			overlay.setHighlightedPlayers(Collections.emptyMap());
 			return;
 		}
-		Map<Player, HighlightStyle> highlightedPlayers = new LinkedHashMap<>();
+
+		Map<Player, HighlightStyle> highlightedPlayers = new LinkedHashMap<>();
 		String targetNormalized = targetPlayerName.toLowerCase(Locale.ENGLISH);
 		HighlightStyle tempStyle = new HighlightStyle(color, showLine, config.showTemporaryPlayerName(), config.temporaryMenuOption(), config.temporaryHighlightRegularMenuPlayerName(), config.temporaryHideOtherPlayerMenus());
 		for (Player player : client.getPlayers()) {
 			if (player == null || player.getName() == null) {
 				continue;
 			}
+
 			if (normalizePlayerName(player.getName()).toLowerCase(Locale.ENGLISH).equals(targetNormalized)) {
 				highlightedPlayers.put(player, tempStyle);
 			}
 		}
-		overlay.setHighlightedPlayers(highlightedPlayers);
+
+		overlay.setHighlightedPlayers(highlightedPlayers);
 	}
 
 	private void setHighlightPlayer(String playerName) {
@@ -148,12 +153,14 @@ public class ChatHighlightPlayerPlugin extends Plugin
 			levelSuffix = cleanedTarget.substring(levelIdx);
 			cleanedTarget = cleanedTarget.substring(0, levelIdx);
 		}
-		String hexColor = colorToHex(highlightColor).replace("#", "");
+
+		String hexColor = colorToHex(highlightColor).replace("#", "");
 		if (levelSuffix.isEmpty())
 		{
 			return "<col=" + hexColor + ">" + cleanedTarget + "</col>";
 		}
-		return "<col=" + hexColor + ">" + cleanedTarget + "</col><col=ff9040>" + levelSuffix + "</col>";
+
+		return "<col=" + hexColor + ">" + cleanedTarget + "</col><col=ff9040>" + levelSuffix + "</col>";
 	}
 
 	private HighlightStyle getMenuHighlightStyle(String playerName)
@@ -162,11 +169,13 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		{
 			return null;
 		}
-		if (isHighlightActive() && playerName.equalsIgnoreCase(targetPlayerName))
+
+		if (isHighlightActive() && playerName.equalsIgnoreCase(targetPlayerName))
 		{
 			return new HighlightStyle(color, showLine, config.showTemporaryPlayerName(), config.temporaryMenuOption(), config.temporaryHighlightRegularMenuPlayerName(), config.temporaryHideOtherPlayerMenus());
 		}
-		return null;
+
+		return null;
 	}
 
 	private boolean shouldSkipMenuOptionHighlight(String configuredMenuOption)
@@ -175,7 +184,8 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		{
 			return true;
 		}
-		for (String rawConfiguredOption : configuredMenuOption.split(","))
+
+		for (String rawConfiguredOption : configuredMenuOption.split(","))
 		{
 			String cleanConfiguredOption = Text.removeTags(rawConfiguredOption).trim();
 			if (!cleanConfiguredOption.isEmpty() && !cleanConfiguredOption.equalsIgnoreCase("none"))
@@ -183,7 +193,8 @@ public class ChatHighlightPlayerPlugin extends Plugin
 				return false;
 			}
 		}
-		return true;
+
+		return true;
 	}
 
 	private boolean shouldHighlightMenuOption(String menuOption, String configuredMenuOption)
@@ -192,7 +203,8 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		{
 			return false;
 		}
-		String cleanMenuOption = Text.removeTags(menuOption).trim();
+
+		String cleanMenuOption = Text.removeTags(menuOption).trim();
 		for (String rawConfiguredOption : configuredMenuOption.split(","))
 		{
 			String cleanConfiguredOption = Text.removeTags(rawConfiguredOption).trim();
@@ -201,14 +213,16 @@ public class ChatHighlightPlayerPlugin extends Plugin
 				return true;
 			}
 		}
-		return false;
+
+		return false;
 	}
 
 	private void highlightMatchingMenuEntry(MenuEntry menuEntry)
 	{
 		String optionName = normalizePlayerName(menuEntry.getOption());
 		String targetName = normalizePlayerName(menuEntry.getTarget());
-		HighlightStyle optionStyle = getMenuHighlightStyle(optionName);
+
+		HighlightStyle optionStyle = getMenuHighlightStyle(optionName);
 		HighlightStyle targetStyle = getMenuHighlightStyle(targetName);
 		boolean isCondensedParent = menuEntry.getSubMenu() != null
 			&& menuEntry.getType() == MenuAction.RUNELITE
@@ -242,30 +256,36 @@ public class ChatHighlightPlayerPlugin extends Plugin
 				playerNames.add(normalizePlayerName(player.getName()).toLowerCase(Locale.ENGLISH));
 			}
 		}
-		return playerNames;
+
+		return playerNames;
 	}
-	private String getMenuEntryPlayerName(MenuEntry menuEntry, Set<String> knownPlayerNames)
+
+	private String getMenuEntryPlayerName(MenuEntry menuEntry, Set<String> knownPlayerNames)
 	{
 		String targetName = normalizePlayerName(menuEntry.getTarget()).toLowerCase(Locale.ENGLISH);
 		if (knownPlayerNames.contains(targetName))
 		{
 			return targetName;
 		}
-		String optionName = normalizePlayerName(menuEntry.getOption()).toLowerCase(Locale.ENGLISH);
+
+		String optionName = normalizePlayerName(menuEntry.getOption()).toLowerCase(Locale.ENGLISH);
 		if (knownPlayerNames.contains(optionName))
 		{
 			return optionName;
 		}
-		return null;
+
+		return null;
 	}
-	private MenuEntry[] filterMenuEntriesForHighlightedPlayers(MenuEntry[] menuEntries)
+
+	private MenuEntry[] filterMenuEntriesForHighlightedPlayers(MenuEntry[] menuEntries)
 	{
 		Set<String> knownPlayerNames = getKnownPlayerNames();
 		if (knownPlayerNames.isEmpty())
 		{
 			return menuEntries;
 		}
-		Set<String> focusedPlayerNames = new LinkedHashSet<>();
+
+		Set<String> focusedPlayerNames = new LinkedHashSet<>();
 		for (MenuEntry menuEntry : menuEntries)
 		{
 			String playerName = getMenuEntryPlayerName(menuEntry, knownPlayerNames);
@@ -273,17 +293,20 @@ public class ChatHighlightPlayerPlugin extends Plugin
 			{
 				continue;
 			}
-			HighlightStyle style = getMenuHighlightStyle(playerName);
+
+			HighlightStyle style = getMenuHighlightStyle(playerName);
 			if (style != null && style.isHideOtherPlayerMenus())
 			{
 				focusedPlayerNames.add(playerName);
 			}
 		}
-		if (focusedPlayerNames.isEmpty())
+
+		if (focusedPlayerNames.isEmpty())
 		{
 			return menuEntries;
 		}
-		List<MenuEntry> filteredEntries = new ArrayList<>(menuEntries.length);
+
+		List<MenuEntry> filteredEntries = new ArrayList<>(menuEntries.length);
 		for (MenuEntry menuEntry : menuEntries)
 		{
 			String playerName = getMenuEntryPlayerName(menuEntry, knownPlayerNames);
@@ -292,9 +315,11 @@ public class ChatHighlightPlayerPlugin extends Plugin
 				filteredEntries.add(menuEntry);
 			}
 		}
-		return filteredEntries.toArray(new MenuEntry[0]);
+
+		return filteredEntries.toArray(new MenuEntry[0]);
 	}
-	private void addChatHighlightMenuEntry(String username, String target)
+
+	private void addChatHighlightMenuEntry(String username, String target)
 	{
 		Color customColor = config.tagColor();
 		String hexColor = colorToHex(customColor);
@@ -304,7 +329,8 @@ public class ChatHighlightPlayerPlugin extends Plugin
 				.setType(MenuAction.RUNELITE_HIGH_PRIORITY)
 				.onClick(e -> setHighlightPlayer(username));
 	}
-	private boolean isChatboxMessageEntry(int packedWidgetId)
+
+	private boolean isChatboxMessageEntry(int packedWidgetId)
 	{
 		final int groupId = WidgetUtil.componentToInterface(packedWidgetId);
 		final int childId = WidgetUtil.componentToId(packedWidgetId);
@@ -312,25 +338,30 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		{
 			return false;
 		}
-		final Widget widget = client.getWidget(groupId, childId);
+
+		final Widget widget = client.getWidget(groupId, childId);
 		if (widget == null)
 		{
 			return false;
 		}
-		final Widget parent = widget.getParent();
+
+		final Widget parent = widget.getParent();
 		if (parent == null || ComponentID.CHATBOX_MESSAGE_LINES != parent.getId())
 		{
 			return false;
 		}
-		final int first = WidgetUtil.componentToId(ComponentID.CHATBOX_FIRST_MESSAGE);
+
+		final int first = WidgetUtil.componentToId(ComponentID.CHATBOX_FIRST_MESSAGE);
 		final int dynamicChildId = (childId - first) * 4 + 1;
 		return parent.getChild(dynamicChildId) != null;
 	}
-	private boolean isChatboxReportMenuEntry(MenuEntry menuEntry)
+
+	private boolean isChatboxReportMenuEntry(MenuEntry menuEntry)
 	{
 		return REPORT.equals(menuEntry.getOption()) && isChatboxMessageEntry(menuEntry.getParam1());
 	}
-	private boolean isMenuEntryMissing(String text)
+
+	private boolean isMenuEntryMissing(String text)
 	{
 		for (MenuEntry menuEntry : client.getMenu().getMenuEntries())
 		{
@@ -339,37 +370,42 @@ public class ChatHighlightPlayerPlugin extends Plugin
 				return false;
 			}
 		}
-		return true;
+
+		return true;
 	}
-	private void maybeAddChatMenuEntries(String username, String target, boolean includeHighlightEntry)
+
+	private void maybeAddChatMenuEntries(String username, String target, boolean includeHighlightEntry)
 	{
 		if (username.trim().length() <= 1)
 		{
 			return;
 		}
-		if (includeHighlightEntry && isMenuEntryMissing("Highlight Player"))
-	{
-		addChatHighlightMenuEntry(username, target);
+
+		if (includeHighlightEntry && isMenuEntryMissing("Highlight Player"))
+		{
+			addChatHighlightMenuEntry(username, target);
+		}
 	}
-}
-	private String cleanPlayerName(String name) {
+
+	private String cleanPlayerName(String name) {
 		if (name == null)
 		{
 			return "";
 		}
 
-		return Text.removeTags(name)
+		return Text.removeTags(name)
 				.replace('\u00A0', ' ')
 				.trim();
 	}
 
-private String normalizePlayerName(String name)
-{
-	return cleanPlayerName(name)
-		.replaceAll("\\s*\\(level-\\d+\\)$", "")
-		.trim();
-}
-	@Override
+	private String normalizePlayerName(String name)
+	{
+		return cleanPlayerName(name)
+				.replaceAll("\\s*\\(level-\\d+\\)$", "")
+				.trim();
+	}
+
+	@Override
 	protected void startUp()
 	{
 		log.info("ChatHighlightPlayerPlugin started!");
@@ -379,93 +415,110 @@ private String normalizePlayerName(String name)
 		overlayManager.add(overlay);
 	}
 
-@Subscribe
-public void onMenuEntryAdded(MenuEntryAdded entry) {
-	highlightMatchingMenuEntry(entry.getMenuEntry());
-			if (entry.getType() != MenuAction.CC_OP.getId() && entry.getType() != MenuAction.CC_OP_LOW_PRIORITY.getId())
-	{
-		return;
-	}
-			if (!isChatboxMessageEntry(entry.getActionParam1()))
-	{
-		return;
-	}
-			if (entry.getOption().toLowerCase().contains(TRADE.toLowerCase()) ) {
-		String username = cleanPlayerName(entry.getTarget());
-		if (isMenuEntryMissing("Highlight Player"))
-		{			Color customColor = config.tagColor();
-			String hexColor = colorToHex(customColor);
-			client.createMenuEntry(1)
-					.setOption("<col=" + hexColor.replace("#", "") + ">" + "Highlight Player" + "</col>")						.setTarget(entry.getTarget())						.setType(MenuAction.WIDGET_SECOND_OPTION)
-					.onClick(e -> setHighlightPlayer(username));
-		}
-		return;
-	}
-	if (entry.getOption().equals(REPORT) && config.showHoverHighlight()) {
-		String username = cleanPlayerName(entry.getTarget());
-		maybeAddChatMenuEntries(username, entry.getTarget(), true);
-	}
-		}
-@Subscribe
-public void onMenuOpened(MenuOpened event)
-{
-	for (MenuEntry menuEntry : client.getMenuEntries())
-	{
-		if (isChatboxReportMenuEntry(menuEntry))
-		{
-			String username = cleanPlayerName(menuEntry.getTarget());
-			if (username.trim().length() > 1)
-			{
-				maybeAddChatMenuEntries(username, menuEntry.getTarget(), true);
-				moveHighlightPlayerEntryToTop();
-			}
-			break;
-		}
-	}
-		MenuEntry[] menuEntries = filterMenuEntriesForHighlightedPlayers(client.getMenuEntries());
-	for (MenuEntry menuEntry : menuEntries)
-	{
-		highlightMatchingMenuEntry(menuEntry);
-	}
-	client.setMenuEntries(menuEntries);
-}		@Subscribe
-public void onBeforeMenuRender(BeforeMenuRender event)
-{
-	MenuEntry[] menuEntries = filterMenuEntriesForHighlightedPlayers(client.getMenuEntries());
-	for (MenuEntry menuEntry : menuEntries)
-	{
-		highlightMatchingMenuEntry(menuEntry);
-	}
-	client.setMenuEntries(menuEntries);
-}
-		private void moveHighlightPlayerEntryToTop()
-{
-	MenuEntry[] menuEntries = client.getMenuEntries();
-	List<MenuEntry> reordered = new ArrayList<>(menuEntries.length);
-	MenuEntry highlightEntry = null;
-			for (MenuEntry menuEntry : menuEntries)
-	{
-		if (menuEntry.getOption().contains("Highlight Player"))
-		{
-			highlightEntry = menuEntry;
-			continue;
-		}
-				reordered.add(menuEntry);
-	}
-			if (highlightEntry != null)
-	{
-		reordered.add(highlightEntry);
-		client.setMenuEntries(reordered.toArray(new MenuEntry[0]));
-	}
-}
+	@Subscribe
+	public void onMenuEntryAdded(MenuEntryAdded entry) {
+		highlightMatchingMenuEntry(entry.getMenuEntry());
 
-@Override
+		if (entry.getType() != MenuAction.CC_OP.getId() && entry.getType() != MenuAction.CC_OP_LOW_PRIORITY.getId())
+		{
+			return;
+		}
+
+		if (!isChatboxMessageEntry(entry.getActionParam1()))
+		{
+			return;
+		}
+
+		if (entry.getOption().toLowerCase().contains(TRADE.toLowerCase()) ) {
+			String username = cleanPlayerName(entry.getTarget());
+			if (isMenuEntryMissing("Highlight Player"))
+			{
+				Color customColor = config.tagColor();
+				String hexColor = colorToHex(customColor);
+				client.createMenuEntry(1)
+						.setOption("<col=" + hexColor.replace("#", "") + ">" + "Highlight Player" + "</col>")
+						.setTarget(entry.getTarget())
+						.setType(MenuAction.WIDGET_SECOND_OPTION)
+						.onClick(e -> setHighlightPlayer(username));
+			}
+			return;
+		}
+
+		if (entry.getOption().equals(REPORT) && config.showHoverHighlight()) {
+			String username = cleanPlayerName(entry.getTarget());
+			maybeAddChatMenuEntries(username, entry.getTarget(), true);
+		}
+
+	}
+
+	@Subscribe
+	public void onMenuOpened(MenuOpened event)
+	{
+		for (MenuEntry menuEntry : client.getMenuEntries())
+		{
+			if (isChatboxReportMenuEntry(menuEntry))
+			{
+				String username = cleanPlayerName(menuEntry.getTarget());
+				if (username.trim().length() > 1)
+				{
+					maybeAddChatMenuEntries(username, menuEntry.getTarget(), true);
+					moveHighlightPlayerEntryToTop();
+				}
+				break;
+			}
+		}
+
+		MenuEntry[] menuEntries = filterMenuEntriesForHighlightedPlayers(client.getMenuEntries());
+		for (MenuEntry menuEntry : menuEntries)
+		{
+			highlightMatchingMenuEntry(menuEntry);
+		}
+		client.setMenuEntries(menuEntries);
+	}
+
+	@Subscribe
+	public void onBeforeMenuRender(BeforeMenuRender event)
+	{
+		MenuEntry[] menuEntries = filterMenuEntriesForHighlightedPlayers(client.getMenuEntries());
+		for (MenuEntry menuEntry : menuEntries)
+		{
+			highlightMatchingMenuEntry(menuEntry);
+		}
+		client.setMenuEntries(menuEntries);
+	}
+
+	private void moveHighlightPlayerEntryToTop()
+	{
+		MenuEntry[] menuEntries = client.getMenuEntries();
+		List<MenuEntry> reordered = new ArrayList<>(menuEntries.length);
+		MenuEntry highlightEntry = null;
+
+		for (MenuEntry menuEntry : menuEntries)
+		{
+			if (menuEntry.getOption().contains("Highlight Player"))
+			{
+				highlightEntry = menuEntry;
+				continue;
+			}
+
+			reordered.add(menuEntry);
+		}
+
+		if (highlightEntry != null)
+		{
+			reordered.add(highlightEntry);
+			client.setMenuEntries(reordered.toArray(new MenuEntry[0]));
+		}
+	}
+
+	@Override
 	protected void shutDown()
 	{
 		overlayManager.remove(overlay);
 		log.info("ChatHighlightPlayerPlugin stopped!");
 	}
-	@Provides
+
+	@Provides
 	ChatHighlightPlayerConfig provideConfig(ConfigManager configManager)
 	{
 		return configManager.getConfig(ChatHighlightPlayerConfig.class);
