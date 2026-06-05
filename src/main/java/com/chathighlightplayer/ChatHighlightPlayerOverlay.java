@@ -44,7 +44,7 @@ public class ChatHighlightPlayerOverlay extends Overlay {
     @Inject
     public ChatHighlightPlayerOverlay() {
 		setPosition(OverlayPosition.DYNAMIC);
-		setLayer(OverlayLayer.UNDER_WIDGETS);
+		setLayer(OverlayLayer.ABOVE_WIDGETS);
     }
 
     void setHighlightedPlayers(Map<Player, HighlightStyle> highlightedPlayers) {
@@ -151,7 +151,7 @@ public class ChatHighlightPlayerOverlay extends Overlay {
             Point minimapPoint = Perspective.localToMinimap(client, targetLocalPos);
             if (minimapPoint != null) {
                 graphics.setColor(color);
-                graphics.fillOval(minimapPoint.getX() - 2, minimapPoint.getY() - 2, 4, 4);
+                	graphics.fillOval(minimapPoint.getX() - 3, minimapPoint.getY() - 3, 6, 6);
             }
         }
 
