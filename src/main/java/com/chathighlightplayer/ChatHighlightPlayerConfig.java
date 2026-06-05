@@ -216,4 +216,22 @@ public interface ChatHighlightPlayerConfig extends Config
 		return true;
 	}
 
+	enum HighlightMode
+	{
+		TILE,
+		OUTLINE
+	}
+
+	@ConfigItem(
+		keyName = "highlightMode",
+		name = "Highlight mode",
+		description = "Choose whether to highlight the tile under the player or outline the player model",
+		position = 4,
+		section = GENERAL_SECTION
+	)
+	default HighlightMode highlightMode()
+	{
+		return HighlightMode.TILE;
+	}
+
 }

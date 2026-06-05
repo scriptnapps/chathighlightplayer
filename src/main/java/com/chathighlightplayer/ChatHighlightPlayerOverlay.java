@@ -13,10 +13,12 @@ import net.runelite.client.ui.overlay.OverlayUtil;
 
 import javax.inject.Inject;
 import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Shape;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -158,7 +160,40 @@ public class ChatHighlightPlayerOverlay extends Overlay {
             }
         }
 
-        OverlayUtil.renderActorOverlay(graphics, targetPlayer, style.isShowName() ? targetPlayer.getName() : "", color);
+        // Choose render mode: TILE uses existing tile highlight; OUTLINE draws model outline around player
+        if (config.highlightMode() == ChatHighlightPlayerConfig.HighlightMode.TILE) {
+            OverlayUtil.renderActorOverlay(graphics, targetPlayer, style.isShowName() ? targetPlayer.getName() : "", color);
+        } else {
+            Shape hull = targetPlayer.getConvexHull();
+            if (hull != null) {
+                graphics.setColor(color);
+                graphics.setStroke(new BasicStroke(2));
+                graphics.draw(hull);
+            }
+            // Optionally draw name above head if requested
+            if (style.isShowName()) {
+                if (hull != null) {
+                    java.awt.Rectangle bounds = hull.getBounds();
+                    java.awt.FontMetrics fm = graphics.getFontMetrics();
+                    String name = targetPlayer.getName();
+                    int textWidth = fm.stringWidth(name);
+                    int textX = bounds.x + (bounds.width - textWidth) / 2;
+                    int textY = bounds.y - 4; // slightly above the top of the hull
+                    // baseline adjustment
+                    int baseline = textY - fm.getDescent();
+                    graphics.setColor(color);
+                    graphics.drawString(name, textX, baseline);
+                } else {
+                    // fallback to canvas position above the player's tile
+                    Point textPoint = Perspective.localToCanvas(client, targetLocalPos, client.getPlane());
+                    if (textPoint != null) {
+                        graphics.setColor(color);
+                        graphics.drawString(targetPlayer.getName(), textPoint.getX(), textPoint.getY() - 20);
+                    }
+                }
+            }
+        }
+
         graphics.setComposite(originalComposite);
     }
 
