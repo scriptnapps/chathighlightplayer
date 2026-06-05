@@ -72,6 +72,18 @@ public interface ChatHighlightPlayerConfig extends Config
 		return 400;
 	}
 
+	@ConfigItem(
+		keyName = "showMinimapDot",
+		name = "Show minimap dot",
+		description = "Show a dot on the minimap for highlighted players",
+		position = 3,
+		section = GENERAL_SECTION
+	)
+	default boolean showMinimapDot()
+	{
+		return true;
+	}
+
 	/* Available fixed durations for temporary highlight */
 	enum HighlightDuration
 	{

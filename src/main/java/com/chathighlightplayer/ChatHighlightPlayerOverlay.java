@@ -42,6 +42,9 @@ public class ChatHighlightPlayerOverlay extends Overlay {
     private Client client;
 
     @Inject
+    private ChatHighlightPlayerConfig config;
+
+    @Inject
     public ChatHighlightPlayerOverlay() {
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);
@@ -147,11 +150,11 @@ public class ChatHighlightPlayerOverlay extends Overlay {
             }
         }
 
-        if (targetLocalPos != null) {
+        if (config.showMinimapDot() && targetLocalPos != null) {
             Point minimapPoint = Perspective.localToMinimap(client, targetLocalPos);
             if (minimapPoint != null) {
                 graphics.setColor(color);
-                	graphics.fillOval(minimapPoint.getX() - 3, minimapPoint.getY() - 3, 6, 6);
+                graphics.fillOval(minimapPoint.getX() - 3, minimapPoint.getY() - 3, 6, 6);
             }
         }
 
