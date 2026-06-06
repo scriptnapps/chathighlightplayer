@@ -84,6 +84,36 @@ public interface ChatHighlightPlayerConfig extends Config
 		return true;
 	}
 
+	/* Minimap dot size choices */
+	enum MinimapDotSize
+	{
+		DEFAULT(4), MEDIUM(6), LARGE(8);
+
+		private final int size;
+
+		MinimapDotSize(int size)
+		{
+			this.size = size;
+		}
+
+		public int size()
+		{
+			return size;
+		}
+	}
+
+	@ConfigItem(
+		keyName = "minimapDotSize",
+		name = "Minimap dot size",
+		description = "Choose minimap dot size (Default / Medium / Large)",
+		position = 4,
+		section = TEMPORARY_HIGHLIGHT_SECTION
+	)
+	default MinimapDotSize minimapDotSize()
+	{
+		return MinimapDotSize.DEFAULT;
+	}
+
 	/* Available fixed durations for temporary highlight */
 	enum HighlightDuration
 	{

@@ -11,7 +11,6 @@ import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 
 import javax.inject.Inject;
-import net.runelite.client.config.ConfigManager;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Composite;
@@ -123,7 +122,9 @@ public class ChatHighlightPlayerMinimapOverlay extends Overlay {
             Point minimapPoint = Perspective.localToMinimap(client, targetLocalPos);
             if (minimapPoint != null) {
                 graphics.setColor(color);
-                graphics.fillOval(minimapPoint.getX() - 3, minimapPoint.getY() - 3, 4, 4);
+                int size = config.minimapDotSize().size();
+                int half = size / 2;
+                graphics.fillOval(minimapPoint.getX() - half, minimapPoint.getY() - half, size, size);
             }
         }
 
