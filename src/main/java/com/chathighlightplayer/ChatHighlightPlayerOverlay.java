@@ -49,7 +49,6 @@ public class ChatHighlightPlayerOverlay extends Overlay {
     @Inject
     public ChatHighlightPlayerOverlay() {
 		setPosition(OverlayPosition.DYNAMIC);
-		setLayer(OverlayLayer.ABOVE_WIDGETS);
     }
 
     void setHighlightedPlayers(Map<Player, HighlightStyle> highlightedPlayers) {

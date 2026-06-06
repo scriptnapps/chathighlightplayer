@@ -22,6 +22,7 @@ import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
+import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.util.Text;
 
 import java.awt.Color;
@@ -83,6 +84,10 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		overlay.setTrimLines(config.trimHighlightLines());
 		overlay.setFadeHighlights(config.fadeHighlights());
 		overlay.setFadeDurationMs(config.fadeDurationMs());
+		// Apply overlay layer change immediately (remove & re-add to ensure manager picks it up)
+		overlayManager.remove(overlay);
+		overlay.setLayer(config.overlayAboveWidgets() ? OverlayLayer.ABOVE_WIDGETS : OverlayLayer.UNDER_WIDGETS);
+		overlayManager.add(overlay);
 		initiatehighlight();
 	}
 
@@ -423,6 +428,8 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		overlay.setTrimLines(config.trimHighlightLines());
 		overlay.setFadeHighlights(config.fadeHighlights());
 		overlay.setFadeDurationMs(config.fadeDurationMs());
+		// Layer controlled by config (default above widgets)
+		overlay.setLayer(config.overlayAboveWidgets() ? OverlayLayer.ABOVE_WIDGETS : OverlayLayer.UNDER_WIDGETS);
 		overlayManager.add(overlay);
 	}
 

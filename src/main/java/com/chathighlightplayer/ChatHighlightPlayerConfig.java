@@ -228,6 +228,18 @@ public interface ChatHighlightPlayerConfig extends Config
 		return false;
 	}
 
+	@ConfigItem(
+		keyName = "overlayAboveWidgets",
+		name = "Overlay above widgets",
+		description = "Render the overlay above UI widgets (bank, inventory). Disable to render below them.",
+		position = 5,
+		section = GENERAL_SECTION
+	)
+	default boolean overlayAboveWidgets()
+	{
+		return true;
+	}
+
 	enum HighlightMode
 	{
 		TILE,
