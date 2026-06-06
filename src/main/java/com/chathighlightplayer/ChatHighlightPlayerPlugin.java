@@ -56,6 +56,9 @@ public class ChatHighlightPlayerPlugin extends Plugin
 	@Inject
 	private ChatHighlightPlayerOverlay overlay;
 
+	@Inject
+	private ChatHighlightPlayerMinimapOverlay minimapOverlay;
+
 	private String targetPlayerName;
 	private long durationSeconds = 10;
 	private Color color = Color.pink;
@@ -88,6 +91,9 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		overlayManager.remove(overlay);
 		overlay.setLayer(config.overlayAboveWidgets() ? OverlayLayer.ABOVE_WIDGETS : OverlayLayer.UNDER_WIDGETS);
 		overlayManager.add(overlay);
+		// Update minimap overlay fade settings but keep it always above widgets
+		minimapOverlay.setFadeHighlights(config.fadeHighlights());
+		minimapOverlay.setFadeDurationMs(config.fadeDurationMs());
 		initiatehighlight();
 	}
 
@@ -114,6 +120,7 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		if (!temporaryHighlightActive)
 		{
 			overlay.setHighlightedPlayers(Collections.emptyMap());
+			minimapOverlay.setHighlightedPlayers(Collections.emptyMap());
 			return;
 		}
 
@@ -131,6 +138,7 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		}
 
 		overlay.setHighlightedPlayers(highlightedPlayers);
+		minimapOverlay.setHighlightedPlayers(highlightedPlayers);
 	}
 
 	private void setHighlightPlayer(String playerName) {
@@ -431,6 +439,12 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		// Layer controlled by config (default above widgets)
 		overlay.setLayer(config.overlayAboveWidgets() ? OverlayLayer.ABOVE_WIDGETS : OverlayLayer.UNDER_WIDGETS);
 		overlayManager.add(overlay);
+
+		// Minimap overlay should always render above widgets so the dot remains visible
+		minimapOverlay.setFadeHighlights(config.fadeHighlights());
+		minimapOverlay.setFadeDurationMs(config.fadeDurationMs());
+		minimapOverlay.setLayer(OverlayLayer.ABOVE_WIDGETS);
+		overlayManager.add(minimapOverlay);
 	}
 
 	@Subscribe
@@ -533,6 +547,7 @@ public class ChatHighlightPlayerPlugin extends Plugin
 	protected void shutDown()
 	{
 		overlayManager.remove(overlay);
+		overlayManager.remove(minimapOverlay);
 		log.info("ChatHighlightPlayerPlugin stopped!");
 	}
 

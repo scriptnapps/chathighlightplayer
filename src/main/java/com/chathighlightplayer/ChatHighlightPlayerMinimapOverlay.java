@@ -9,34 +9,26 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
-import net.runelite.client.ui.overlay.OverlayUtil;
 
 import javax.inject.Inject;
+import net.runelite.client.config.ConfigManager;
 import java.awt.AlphaComposite;
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.Shape;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class ChatHighlightPlayerOverlay extends Overlay {
+public class ChatHighlightPlayerMinimapOverlay extends Overlay {
     private static final int DEFAULT_FADE_DURATION_MS = 400;
     private static final int MIN_FADE_DURATION_MS = 100;
     private static final int MAX_FADE_DURATION_MS = 2000;
-    private static final int MIN_LINE_START_PADDING = 18;
-    private static final int MAX_LINE_START_PADDING = 42;
-    private static final int MIN_LINE_END_PADDING = 10;
-    private static final int MAX_LINE_END_PADDING = 28;
-    private static final double LINE_START_PADDING_RATIO = 0.08d;
-    private static final double LINE_END_PADDING_RATIO = 0.05d;
+
     private Map<String, RenderedHighlight> highlightedPlayers = Collections.emptyMap();
     private final Map<String, RenderedHighlight> fadingPlayers = new LinkedHashMap<>();
-    private boolean trimLines = true;
     private boolean fadeHighlights = true;
     private int fadeDurationMs = DEFAULT_FADE_DURATION_MS;
 
@@ -47,8 +39,10 @@ public class ChatHighlightPlayerOverlay extends Overlay {
     private ChatHighlightPlayerConfig config;
 
     @Inject
-    public ChatHighlightPlayerOverlay() {
-		setPosition(OverlayPosition.DYNAMIC);
+    public ChatHighlightPlayerMinimapOverlay() {
+        setPosition(OverlayPosition.DYNAMIC);
+        // Always render above widgets so minimap dot remains visible regardless of plugin overlay settings
+        setLayer(OverlayLayer.ABOVE_WIDGETS);
     }
 
     void setHighlightedPlayers(Map<Player, HighlightStyle> highlightedPlayers) {
@@ -81,10 +75,6 @@ public class ChatHighlightPlayerOverlay extends Overlay {
         this.highlightedPlayers = updatedHighlights;
     }
 
-    void setTrimLines(boolean trimLines) {
-        this.trimLines = trimLines;
-    }
-
     void setFadeHighlights(boolean fadeHighlights) {
         this.fadeHighlights = fadeHighlights;
         if (!fadeHighlights) {
@@ -100,7 +90,7 @@ public class ChatHighlightPlayerOverlay extends Overlay {
     public Dimension render(Graphics2D graphics) {
         long now = System.currentTimeMillis();
         for (RenderedHighlight highlight : highlightedPlayers.values()) {
-            renderHighlight(graphics, highlight.getPlayer(), highlight.getStyle(), 1.0f);
+            renderDot(graphics, highlight.getPlayer(), highlight.getStyle(), 1.0f);
         }
 
         Iterator<Map.Entry<String, RenderedHighlight>> iterator = fadingPlayers.entrySet().iterator();
@@ -112,12 +102,12 @@ public class ChatHighlightPlayerOverlay extends Overlay {
                 continue;
             }
 
-            renderHighlight(graphics, highlight.getPlayer(), highlight.getStyle(), fadeAlpha);
+            renderDot(graphics, highlight.getPlayer(), highlight.getStyle(), fadeAlpha);
         }
         return null;
     }
 
-    private void renderHighlight(Graphics2D graphics, Player targetPlayer, HighlightStyle style, float alpha) {
+    private void renderDot(Graphics2D graphics, Player targetPlayer, HighlightStyle style, float alpha) {
         if (targetPlayer == null) {
             return;
         }
@@ -129,86 +119,15 @@ public class ChatHighlightPlayerOverlay extends Overlay {
         WorldPoint targetWorldPos = targetPlayer.getWorldLocation();
         LocalPoint targetLocalPos = LocalPoint.fromWorld(client, targetWorldPos);
 
-        if (style.isShowLine() && client.getLocalPlayer() != null) {
-            WorldPoint myWorldPos = client.getLocalPlayer().getWorldLocation();
-            LocalPoint myLocalPos = LocalPoint.fromWorld(client, myWorldPos);
-
-            if (myLocalPos != null && targetLocalPos != null) {
-                @SuppressWarnings("deprecation")
-                int plane = client.getPlane();
-                Point myScreenPos = Perspective.localToCanvas(client, myLocalPos, plane);
-                Point targetScreenPos = Perspective.localToCanvas(client, targetLocalPos, plane);
-
-                if (myScreenPos != null && targetScreenPos != null) {
-                    graphics.setColor(color);
-                    if (trimLines) {
-                        drawTrimmedLine(graphics, myScreenPos, targetScreenPos);
-                    } else {
-                        graphics.drawLine(myScreenPos.getX(), myScreenPos.getY(),
-                                targetScreenPos.getX(), targetScreenPos.getY());
-                    }
-                }
-            }
-        }
-
-
-        // Choose render mode: TILE uses existing tile highlight; OUTLINE draws model outline around player
-        if (config.highlightMode() == ChatHighlightPlayerConfig.HighlightMode.TILE) {
-            OverlayUtil.renderActorOverlay(graphics, targetPlayer, style.isShowName() ? targetPlayer.getName() : "", color);
-        } else {
-            Shape hull = targetPlayer.getConvexHull();
-            if (hull != null) {
+        if (config.showMinimapDot() && targetLocalPos != null) {
+            Point minimapPoint = Perspective.localToMinimap(client, targetLocalPos);
+            if (minimapPoint != null) {
                 graphics.setColor(color);
-                graphics.setStroke(new BasicStroke(2));
-                graphics.draw(hull);
-            }
-            // Optionally draw name above head if requested
-            if (style.isShowName()) {
-                if (hull != null) {
-                    java.awt.Rectangle bounds = hull.getBounds();
-                    java.awt.FontMetrics fm = graphics.getFontMetrics();
-                    String name = targetPlayer.getName();
-                    int textWidth = fm.stringWidth(name);
-                    int textX = bounds.x + (bounds.width - textWidth) / 2;
-                    int textY = bounds.y - 4; // slightly above the top of the hull
-                    // baseline adjustment
-                    int baseline = textY - fm.getDescent();
-                    graphics.setColor(color);
-                    graphics.drawString(name, textX, baseline);
-                } else {
-                    // fallback to canvas position above the player's tile
-                    Point textPoint = Perspective.localToCanvas(client, targetLocalPos, client.getPlane());
-                    if (textPoint != null) {
-                        graphics.setColor(color);
-                        graphics.drawString(targetPlayer.getName(), textPoint.getX(), textPoint.getY() - 20);
-                    }
-                }
+                graphics.fillOval(minimapPoint.getX() - 3, minimapPoint.getY() - 3, 4, 4);
             }
         }
 
         graphics.setComposite(originalComposite);
-    }
-
-    private void drawTrimmedLine(Graphics2D graphics, Point start, Point end) {
-        int dx = end.getX() - start.getX();
-        int dy = end.getY() - start.getY();
-        double length = Math.hypot(dx, dy);
-        int startPadding = clamp((int) Math.round(length * LINE_START_PADDING_RATIO), MIN_LINE_START_PADDING, MAX_LINE_START_PADDING);
-        int endPadding = clamp((int) Math.round(length * LINE_END_PADDING_RATIO), MIN_LINE_END_PADDING, MAX_LINE_END_PADDING);
-
-        if (length <= startPadding + endPadding) {
-            return;
-        }
-
-        double unitX = dx / length;
-        double unitY = dy / length;
-
-        int trimmedStartX = (int) Math.round(start.getX() + unitX * startPadding);
-        int trimmedStartY = (int) Math.round(start.getY() + unitY * startPadding);
-        int trimmedEndX = (int) Math.round(end.getX() - unitX * endPadding);
-        int trimmedEndY = (int) Math.round(end.getY() - unitY * endPadding);
-
-        graphics.drawLine(trimmedStartX, trimmedStartY, trimmedEndX, trimmedEndY);
     }
 
     private int clamp(int value, int min, int max) {
