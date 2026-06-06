@@ -11,8 +11,8 @@ import java.awt.Color;
 @SuppressWarnings("unused")
 public interface ChatHighlightPlayerConfig extends Config
 {
-	String TEMPORARY_HIGHLIGHT_SECTION = "temporaryHighlight";
-	String CHATBOX_SECTION = "chatboxMenu";
+	String TEMPORARY_HIGHLIGHT_SECTION = "highlight";
+	String CHATBOX_SECTION = "menu";
 	String GENERAL_SECTION = "general";
 
 	@ConfigSection(
@@ -23,16 +23,16 @@ public interface ChatHighlightPlayerConfig extends Config
 	String generalSection = GENERAL_SECTION;
 
 	@ConfigSection(
-		name = "Player Highlight",
-		description = "Options for player highlight behavior",
-		position = 2
+		name = "Highlight",
+		description = "Options for temporary player highlights",
+		position = 1
 	)
 	String temporaryHighlightSection = TEMPORARY_HIGHLIGHT_SECTION;
 
 	@ConfigSection(
-		name = "Chatbox Menu",
-		description = "Options for adding Highlight Player to chatbox menus",
-		position = 1
+		name = "Menu & Chat",
+		description = "Options for chatbox menu items and chat behavior",
+		position = 2
 	)
 	String chatboxSection = CHATBOX_SECTION;
 
@@ -40,8 +40,8 @@ public interface ChatHighlightPlayerConfig extends Config
 		keyName = "trimHighlightLines",
 		name = "Trim highlight lines",
 		description = "Shorten line endpoints so they do not pass through player models",
-		position = 0,
-		section = GENERAL_SECTION
+		position = 6,
+		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default boolean trimHighlightLines()
 	{
@@ -77,7 +77,7 @@ public interface ChatHighlightPlayerConfig extends Config
 		name = "Show minimap dot",
 		description = "Show a dot on the minimap for highlighted players",
 		position = 3,
-		section = GENERAL_SECTION
+		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default boolean showMinimapDot()
 	{
@@ -87,7 +87,7 @@ public interface ChatHighlightPlayerConfig extends Config
 	/* Available fixed durations for temporary highlight */
 	enum HighlightDuration
 	{
-		S0(0), S5(5), S10(10), S15(15), S20(20), S30(30), S45(45), S60(60), S90(90), S120(120);
+		S5(5), S10(10), S15(15), S20(20), S30(30), S45(45), S60(60), S90(90), S120(120);
 
 		private final int seconds;
 
@@ -124,7 +124,7 @@ public interface ChatHighlightPlayerConfig extends Config
 		keyName = "tagColor",
 		name = "Color",
 		description = "Color used for player highlights",
-		position = 1,
+		position = 2,
 		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default Color tagColor()
@@ -136,7 +136,7 @@ public interface ChatHighlightPlayerConfig extends Config
 		keyName = "showline",
 		name = "Line enabled",
 		description = "Draw a line to the highlighted player",
-		position = 2,
+		position = 5,
 		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default boolean line()
@@ -148,8 +148,8 @@ public interface ChatHighlightPlayerConfig extends Config
 		keyName = "highlightCondensedPlayerName",
 		name = "Highlight condensed player name",
 		description = "Color the player name in condensed player option menus when highlighted",
-		position = 3,
-		section = TEMPORARY_HIGHLIGHT_SECTION
+		position = 1,
+		section = CHATBOX_SECTION
 	)
 	default boolean highlightCondensedPlayerName()
 	{
@@ -160,8 +160,8 @@ public interface ChatHighlightPlayerConfig extends Config
 		keyName = "temporaryHighlightRegularMenuPlayerName",
 		name = "Highlight menu player name",
 		description = "Color the player name in regular right-click menus when highlighted",
-		position = 4,
-		section = TEMPORARY_HIGHLIGHT_SECTION
+		position = 2,
+		section = CHATBOX_SECTION
 	)
 	default boolean temporaryHighlightRegularMenuPlayerName()
 	{
@@ -172,8 +172,8 @@ public interface ChatHighlightPlayerConfig extends Config
 		keyName = "temporaryHideOtherPlayerMenus",
 		name = "Only show this player's menu",
 		description = "Hide menu entries for other players when the highlighted player is in the menu",
-		position = 5,
-		section = TEMPORARY_HIGHLIGHT_SECTION
+		position = 3,
+		section = CHATBOX_SECTION
 	)
 	default boolean temporaryHideOtherPlayerMenus()
 	{
@@ -184,7 +184,7 @@ public interface ChatHighlightPlayerConfig extends Config
 		keyName = "temporaryMenuOption",
 		name = "Menu option",
 		description = "Comma-separated menu options to color for highlighted players. Leave blank or use None to disable. Use * for any option",
-		position = 6,
+		position = 7,
 		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default String temporaryMenuOption()
@@ -196,7 +196,7 @@ public interface ChatHighlightPlayerConfig extends Config
 		keyName = "showTemporaryPlayerName",
 		name = "Show name above head",
 		description = "Show the player name above the highlight",
-		position = 7,
+		position = 4,
 		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default boolean showTemporaryPlayerName()
@@ -216,6 +216,18 @@ public interface ChatHighlightPlayerConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+		keyName = "announceHighlightInChat",
+		name = "Announce highlight in chat",
+		description = "Post a chat message 'Highlighted: NAME' when a player is highlighted",
+		position = 4,
+		section = CHATBOX_SECTION
+	)
+	default boolean announceHighlightInChat()
+	{
+		return false;
+	}
+
 	enum HighlightMode
 	{
 		TILE,
@@ -226,8 +238,8 @@ public interface ChatHighlightPlayerConfig extends Config
 		keyName = "highlightMode",
 		name = "Highlight mode",
 		description = "Choose whether to highlight the tile under the player or outline the player model",
-		position = 4,
-		section = GENERAL_SECTION
+		position = 1,
+		section = TEMPORARY_HIGHLIGHT_SECTION
 	)
 	default HighlightMode highlightMode()
 	{

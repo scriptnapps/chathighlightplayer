@@ -4,6 +4,7 @@ import com.google.inject.Provides;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.ChatMessageType;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.Player;
@@ -136,6 +137,16 @@ public class ChatHighlightPlayerPlugin extends Plugin
 		// Use selected preset duration (seconds)
 		durationSeconds = config.duration().seconds();
 		color = config.tagColor();
+
+		// Optionally announce in chat that a player was highlighted
+		if (config.announceHighlightInChat()) {
+			String cleaned = cleanPlayerName(playerName);
+			String hex = colorToHex(config.tagColor()).replace("#", "");
+			String nameFormatted = "<col=" + hex + ">" + cleaned + "</col>";
+			String msg = "Highlighted: " + nameFormatted;
+			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", msg, null);
+		}
+
 		initiatehighlight();
 	}
 
