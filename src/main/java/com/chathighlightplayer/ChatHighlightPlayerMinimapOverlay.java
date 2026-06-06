@@ -115,15 +115,37 @@ public class ChatHighlightPlayerMinimapOverlay extends Overlay {
         graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
 
         Color color = style.getColor();
-        WorldPoint targetWorldPos = targetPlayer.getWorldLocation();
-        LocalPoint targetLocalPos = LocalPoint.fromWorld(client, targetWorldPos);
+        // Use the player's LocalPoint (includes in-tile movement) so the minimap dot animates smoothly.
+        LocalPoint targetLocalPos = null;
+        try {
+            targetLocalPos = targetPlayer.getLocalLocation();
+        } catch (NoSuchMethodError ignored) {
+            // Older API builds may not have getLocalLocation(); fall back to world->local conversion
+        }
+        if (targetLocalPos == null) {
+            WorldPoint targetWorldPos = targetPlayer.getWorldLocation();
+            targetLocalPos = LocalPoint.fromWorld(client, targetWorldPos);
+        }
 
         if (config.showMinimapDot() && targetLocalPos != null) {
             Point minimapPoint = Perspective.localToMinimap(client, targetLocalPos);
             if (minimapPoint != null) {
-                graphics.setColor(color);
                 int size = config.minimapDotSize().size();
                 int half = size / 2;
+
+                // Outline: subtle filled ring (size+2) with reduced opacity, centers cleanly
+                float outlineOpacity = 0.75f;
+                int outlineSize = size + 2;
+                int outerHalf = outlineSize / 2;
+
+                // Draw outline (filled) with multiplied alpha so fading affects it
+                graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha * outlineOpacity));
+                graphics.setColor(Color.BLACK);
+                graphics.fillOval(minimapPoint.getX() - outerHalf, minimapPoint.getY() - outerHalf, outlineSize, outlineSize);
+
+                // Inner dot: restore base alpha
+                graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+                graphics.setColor(color);
                 graphics.fillOval(minimapPoint.getX() - half, minimapPoint.getY() - half, size, size);
             }
         }
