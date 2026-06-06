@@ -87,7 +87,7 @@ public interface ChatHighlightPlayerConfig extends Config
 	/* Minimap dot size choices */
 	enum MinimapDotSize
 	{
-		DEFAULT(4), MEDIUM(6), LARGE(8);
+		DEFAULT(5), MEDIUM(6), LARGE(8);
 
 		private final int size;
 
